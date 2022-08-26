@@ -3,50 +3,34 @@ import re
 
 class ObsidianVault:
     def __init__(self,vault_folder):
-        self.vault_folder = vault_folder
-        self.categories = self.get_categories()
-    
+        # TODO: allow vault_folder to be str or path
+        self.vault_folder = Path(vault_folder)
+        self.category_pattern = "^[0-9][0-9]_"
+        self.id_pattern = "^[0-9][0-9]\.[0-9][0-9]\.[0-9][0-9][0-9]"
+        self.get_category_folders()
+        self.numbered_files = []
+        self.get_numbered_files(self.vault_folder)
+     
+    def get_category_folders(self):
+        '''
+        List of category folders.
+        '''
+        self.category_folders = [item for item in self.vault_folder.iterdir() \
+            if item.is_dir() and re.match(self.category_pattern,item.name)]
 
-    def get_categories(self):
+    def get_numbered_files(self,folder_path):
         '''
-        Get categories from the top level folder structure.
-        Folder name format: NN_Folder_Name required to be recognized
-        as a category.
+        List of all numbered files in a folder and its subfolder
+        '''
+        for item in folder_path.iterdir():
+            if item.is_file():
+                if re.match(self.id_pattern,item.name):
+                    self.numbered_files.append(VaultFile(item))
 
-            NN : Category ID (00 - 99)
-            Folder Name : Must be letters, numbers and underscores ONLY. 
-        '''
-        self.categories = {}
-        for item in Path(self.vault_folder).iterdir():
-            pass
+            elif item.is_dir() and re.match(self.category_pattern,item.name):
+                self.get_numbered_files(item)       
 
-    def get_topic_ids(self, file_list, category_id):
-        '''
-        Files within a folder have that folder's category ID, plus
-        a two-digit topic ID, plus a counter. Example:
-            NN.NN.NNN_File_Description.ext
-        This function extracts the two digit topic ID from file names
-        with the given category ID.
-        '''
-        pass
-
-    def get_file_names(self,folder):
-        '''
-        Get a list of all files in a folder.
-        '''
-        pass
-    
-    def get_counters(self,category_id, topic_id,folder):
-        '''
-        Extracts the three digit counter from file names with the 
-        given category + topic id.
-        '''
-        pass
-
-    def new_topic(self,category_id, folder):
-        '''
-        Creates a new topic id file
-        '''
+   
     
 class VaultFile:
     def __init__(self,file_path):
