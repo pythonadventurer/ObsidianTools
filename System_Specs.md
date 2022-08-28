@@ -58,5 +58,5 @@ Within a folder, these will always sort to the beginning of the set of files wit
 - A file in the Index folder will have category 01 and a topic number that corresponds to the category the file pertains to. Example: if category 04 is "Projects", then an index pertaining to items in the Projects folder may have the file id 01.04.001_Projects.md
 - 
 ### Linked Images and Other Files
-
+- Some Markdown files will contain links to other files.  
 
