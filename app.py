@@ -15,7 +15,11 @@ my_vault = ObsidianVault(vault_folder)
 # print(my_vault.category_folders)
 
 for file in my_vault.numbered_files:
-    print(file.file_path)
+    print(file.file_name)
+
+
+    
+
 
 
 
