@@ -1,12 +1,15 @@
-from concurrent.futures import process
 import config
 from lib import *
     
-process_files(config.to_file)
+my_vault = ObsidianVault(config.vault_folder)
+
+# my_vault.create_topic()
+
+print(my_vault.categories)
 
 
 
-
+# print(max(my_vault.categories['06']['topics']))
 
 
 
