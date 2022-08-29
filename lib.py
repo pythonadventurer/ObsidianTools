@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
 import sys
+import subprocess
+import os
 
 
 class ObsidianVault:
@@ -57,16 +59,6 @@ class ObsidianVault:
 
         return categories_dict
 
-
-
-    def topic_ids_by_category(self):
-        '''
-        list of topic IDs within each category.
-        Used for assigning new topic IDs.
-        '''
-        pass
-
-
     def create_topic(self):
         while True:
             self.update_topics()
@@ -102,8 +94,31 @@ class ObsidianVault:
                         f.write(self.file_heading.format(new_topic_id,"topic",topic_name,topic_name))
                     print(f"Topic: '{new_topic_name} created.")                  
                     
+    def process_files(self,folder):
+        """
+        Categorize and add files to an Obsidian vault.
+        """
+        file_menu = """
+        <t> Assign topic; <s> Skip to next file; <v> View file; q> Quit
 
+        Please select an option: """
 
+        for file in Path(folder).iterdir():
+            print(f"\nCurrent file: {file.name}")
+            while True:
+                response = input(file_menu)
+                if response[0].upper() == "Q":
+                    print("Goodbye!")
+                    sys.exit()
+
+                elif response[0].upper() == "S":
+                    break
+
+                elif response[0].upper() == "V":
+                    os.startfile(file)
+
+                elif response[0].upper() == "T":
+                    print("Assign Topic is not implemented.")
 
 
 class VaultFile:
@@ -159,32 +174,3 @@ class VaultFile:
             return self.file_id[6:]
         else:
             return None
-
-
-
-
-
-
-def process_files(folder):
-    """
-    Categorize and add files to an Obsidian vault.
-    """
-
-    file_menu = """
-    <t> Assign topic; <s> Skip to next file; q> Quit
-
-    Please select an option: """
-
-    for file in Path(folder).iterdir():
-        print(f"\nCurrent file: {file.name}")
-        while True:
-            response = input(file_menu)
-            if response[0].upper() == "Q":
-                print("Goodbye!")
-                sys.exit()
-
-            elif response[0].upper() == "S":
-                break
-
-
-
