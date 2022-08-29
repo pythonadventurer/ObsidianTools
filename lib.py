@@ -11,6 +11,8 @@ class ObsidianVault:
         self.get_numbered_files(self.vault_folder)
         self.topics = self.update_topics()
         self.categories = self.update_categories()
+        self.file_heading = "---\nfile_id: '{}'\ntype: '{}'\ntitle: '{}'\n" + \
+                            "---\n# {}"
 
     def get_numbered_files(self,folder):
         '''
@@ -69,6 +71,8 @@ class ObsidianVault:
         while True:
             self.update_topics()
             topic_name = input("\nEnter a topic or <q> to go back: ")
+            
+            # search for topic by name
             search_topics = [self.topics[topic].upper() for topic in self.topics.keys()]
             if topic_name.upper() in search_topics:
                 new_topic_name = input(f"Sorry, topic '{topic_name}' already exists. Press <b> to enter another topic, or <q> to quit to the previous menu.")
@@ -87,7 +91,16 @@ class ObsidianVault:
                 if action.upper() == "N":
                     continue
                 else:
-                    print("Topic creation not implemented.")
+                    # default category to Library. 
+                    # TODO Add category selection option.
+                    new_topic_category = "06"
+                    max_topic_id = max(self.categories[new_topic_category]["topics"])[-2:]
+                    new_topic_id = new_topic_category + "." + f"{int(max_topic_id) + 1:0>2}" + ".000"
+                    new_topic_name = new_topic_id + "_" + topic_name.replace(" ","_") + ".md"
+                    new_topic_path = Path(self.vault_folder, new_topic_name)
+                    with open(new_topic_path,"w") as f:
+                        f.write(self.file_heading.format(new_topic_id,"topic",topic_name,topic_name))
+                    print(f"Topic: '{new_topic_name} created.")                  
                     
 
 
