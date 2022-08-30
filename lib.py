@@ -2,7 +2,6 @@ from hashlib import new
 from pathlib import Path
 import re
 import sys
-import subprocess
 import os
 
 
@@ -98,9 +97,25 @@ class ObsidianVault:
                     new_topic_path = Path(self.vault_folder, r"06_Library",new_topic_name)
                     with open(new_topic_path,"w") as f:
                         f.write(self.file_heading.format(new_topic_id,"topic",topic_name,topic_name))
-                    print(f"Topic: '{new_topic_name} created.")   
+                    print(f"Topic: '{new_topic_name} created.")
+                    self.update_topics()   
                     return               
-                    
+
+    def assign_topic(self,file, topic_id):
+        # search for topic by topic_id
+        if topic_id in self.topics.keys():
+            new_counter = int(max(self.topics[topic_id]["counters"])) + 1
+            new_counter = f"{new_counter:0>3}"
+            new_file_name = topic_id + "." + new_counter + "_" + file.name 
+            new_file_path = Path(self.vault_folder,"06_Library",new_file_name)
+            file.rename(new_file_path)
+            print(f"New file: '{new_file_path}' added.")
+
+        else:
+            print("Topic ID does not exist.")
+        
+        return
+
     def process_files(self,folder):
         """
         Categorize and add files to an Obsidian vault.
@@ -131,15 +146,14 @@ class ObsidianVault:
 
                 elif response[0].upper() == "T":
                     assign_topic = input("Enter topic ID (NN.NN): ")
-                    # search for topic by topic_id
-                    if assign_topic in self.topics.keys():
-                        new_counter = int(max(self.topics[assign_topic]["counters"])) + 1
-                        new_counter = f"{new_counter:0>3}"
-                        new_file_name = assign_topic + "." + new_counter + "_" + file.name 
-                        new_file_path = Path(self.vault_folder,"06_Library",new_file_name)
-                        file.rename(new_file_path)
-                        print(f"New file: '{new_file_path}' added.")
-                        break
+                    self.assign_topic(file,assign_topic)
+                    break
+                
+                elif re.match("^[0-9][0-9]",response):
+                    # if response is a valid topic ID, go straight to assign topic
+                    self.assign_topic(file, response)
+                    break
+
 
 
 

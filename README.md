@@ -37,7 +37,6 @@ These tools are designed to work with a specific file organizational structure, 
 
 ### Challenges
 - System easily becomes cumbersome to manage manually.  As the number of files increases, it becomes more difficult to keep track of category and topic numbers. 
-- Likely to be difficult and cumbersome for a non-technical user.
 
 ### System Specifications
 #### File Types
