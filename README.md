@@ -16,12 +16,12 @@ All files in this package, unless otherwise noted, are copyrighted by Robert T. 
 
 ## Filing System
 
-Insipired by [Johnny Decimal](https://johnnydecimal.com).
+Inspired by [Johnny Decimal](https://johnnydecimal.com).
 
 These tools are designed to work with a specific file organizational structure, described herein.
 ### Goals
 - Organize a huge number of files using only a system of file numbering.  
-- Provide the minimum strucutre needed in order to find a file easily via browsing.
+- Provide the minimum structure needed in order to find a file easily via browsing.
 - Consistency, so that the system can be incorporated into a file organizing application.
 - Portability and platform independence.
 
@@ -39,7 +39,7 @@ These tools are designed to work with a specific file organizational structure, 
 - System easily becomes cumbersome to manage manually.  As the number of files increases, it becomes more difficult to keep track of category and topic numbers. 
 - Likely to be difficult and cumbersome for a non-technical user.
 
-### System Specifiations
+### System Specifications
 #### File Types
 - System can be used to organize almost any collection of files whose name can be changed.  This excludes system files or files required by specific applications that are not designed to be altered by any program other than the indended program.
 - All text files are to be in Markdown format and have the extension "*.md".
@@ -53,7 +53,7 @@ The parts of this example file ID are:
 
     02 : Category.  Denotes the general type of the file.  Examples: Work, Personal, Journal, Projects, Sales, Finance, etc.
     01 : Topic.  Should be as specific as possible, easy to remember, and helpful when browsing the file system. Examples: 
-    001 : Counter.  Unique ID, within the topic, to idenfity the file
+    001 : Counter.  Unique ID, within the topic, to identify the file
 
 The rest of the file after the first underscore should be a useful description of the file.
 
@@ -69,7 +69,7 @@ A heading for a Category file will have topic 00 and counter 000.  Example:
 
 - Example filing system: a folder containing the following files:
 
-```
+gi```
     02.00.000_Filing_Cabinet.md                    --> This file specifies a category, which in this case is numbered '02.
     02.01.000_My_Awesome_Files.md                  --> This file specifies a topic within a category.
     02.01.001_An_Awesome_File.pdf                  --> A file with a category and topic
