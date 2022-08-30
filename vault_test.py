@@ -22,4 +22,3 @@ my_vault.process_files(Path(config.vault_folder, r"06_Library\TO_FILE"))
 
 
 
-

@@ -1,3 +1,4 @@
+from hashlib import new
 from pathlib import Path
 import re
 import sys
@@ -36,8 +37,13 @@ class ObsidianVault:
         topics_dict = {}
         for file in self.numbered_files:
             if file.counter == "000":
-                topics_dict[file.topic_id] = file.title
-                
+                topics_dict[file.topic_id] = {"title":file.title}
+                topics_dict[file.topic_id]["counters"] = []
+        # get counters
+        for file in self.numbered_files:
+            if file.topic_id in topics_dict:
+                topics_dict[file.topic_id]["counters"].append(file.counter)
+
         return topics_dict
         
 
@@ -89,7 +95,7 @@ class ObsidianVault:
                     max_topic_id = max(self.categories[new_topic_category]["topics"])[-2:]
                     new_topic_id = new_topic_category + "." + f"{int(max_topic_id) + 1:0>2}" + ".000"
                     new_topic_name = new_topic_id + "_" + topic_name.replace(" ","_") + ".md"
-                    new_topic_path = Path(self.vault_folder, new_topic_name)
+                    new_topic_path = Path(self.vault_folder, r"06_Library",new_topic_name)
                     with open(new_topic_path,"w") as f:
                         f.write(self.file_heading.format(new_topic_id,"topic",topic_name,topic_name))
                     print(f"Topic: '{new_topic_name} created.")                  
@@ -99,7 +105,7 @@ class ObsidianVault:
         Categorize and add files to an Obsidian vault.
         """
         file_menu = """
-        <t> Assign topic; <s> Skip to next file; <v> View file; q> Quit
+        <t> Assign topic; <s> Skip to next file; <v> View file; <c> Create topic; q> Quit
 
         Please select an option: """
 
@@ -117,8 +123,24 @@ class ObsidianVault:
                 elif response[0].upper() == "V":
                     os.startfile(file)
 
+                elif response[0].upper() == "C":
+                    self.create_topic()
+
                 elif response[0].upper() == "T":
-                    print("Assign Topic is not implemented.")
+                    assign_topic = input("Enter topic Id (NN.NN): ")
+                    # search for topic by topic_id
+                    if assign_topic in self.topics.keys():
+                        new_counter = int(max(self.topics[assign_topic]["counters"])) + 1
+                        new_counter = f"{new_counter:0>3}"
+                        new_file_name = assign_topic + "." + new_counter + "_" + file.name 
+                        new_file_path = Path(self.vault_folder,"06_Library",new_file_name)
+                        file.rename(new_file_path)
+                        print(f"New file: '{new_file_path}' added.")
+
+
+
+
+
 
 
 class VaultFile:
