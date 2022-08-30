@@ -4,7 +4,6 @@ import re
 import sys
 import os
 
-
 class ObsidianVault:
     def __init__(self,vault_folder):
         self.vault_folder = Path(vault_folder)
@@ -154,13 +153,6 @@ class ObsidianVault:
                     self.assign_topic(file, response)
                     break
 
-
-
-
-
-
-
-
 class VaultFile:
     '''
     file_id = filename[:9]
@@ -214,3 +206,65 @@ class VaultFile:
             return self.file_id[6:]
         else:
             return None
+
+
+def convert_zim_header(zim_header):
+    '''
+    Convert a ZimWiki heading to Markdown.
+
+    ====== 2022-02-14 Replace LogAppend with SendToLog ======
+
+    becomes:
+
+        # 2022-02-14 Replace LogAppend with SendToLog
+
+    ===== SendToLog =====
+
+    becomes:
+
+    ## SendToLog
+
+    '''
+    header = re.match("^={2,}",zim_header)
+    if header != None:
+        if len(header[0]) == 6:
+            md_header = "#"
+        elif len(header[0]) == 5:
+            md_header = "##"
+        elif len(header[0]) == 4:
+            md_header = "###"
+        elif len(header[0]) == 3:
+            md_header = "####"
+        elif len(header[0]) == 2:
+            md_header = "#####"
+
+        new_header = md_header + zim_header.replace("=","")
+
+        return new_header
+
+    else:
+        return None
+
+def zim_to_md(zim_file,dest_dir):
+    with open(zim_file,"r") as f:
+        # Skip Zim wiki data at to of page
+        content = f.read().split("\n")[3:]
+    
+    new_content = []
+
+    for line in content:
+        if re.match("^={2,}",line) != None:
+            line = convert_zim_header(line)
+        
+        line = line.replace("[*] ","- [x] ")
+        line = line.replace("[ ] ","- [ ] ")
+        line = line.replace("* ","- ")
+
+        new_content.append(line)
+
+    new_content = "\n".join(new_content)
+    new_file_name = Path(dest_dir,zim_file.stem + ".md")
+    with open(new_file_name,"w") as f:
+        f.write(new_content)
+    
+    print(f"Created file: {new_file_name}")
