@@ -152,6 +152,28 @@ class ObsidianVault:
                     # if response is a valid topic ID, go straight to assign topic
                     self.assign_topic(file, response)
                     break
+    
+    def remove_file_ids(self,folder):
+        '''
+        Remove all file IDs from files.
+        '''
+        for item in folder.iterdir():
+            if re.match(self.id_pattern,item.name) != None:
+                new_name = Path(folder,item.name[10:])
+                item.rename(new_name)
+                print(new_name)
+
+            if item.is_dir():
+                self.remove_file_ids(item)
+
+            
+
+                # if item.is_file():
+                #     
+                #     item.rename(new_name)
+                # else:
+                #     self.remove_file_ids(item)
+
 
 class VaultFile:
     '''
