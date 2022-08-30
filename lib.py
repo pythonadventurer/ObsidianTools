@@ -65,21 +65,20 @@ class ObsidianVault:
 
         return categories_dict
 
-    def create_topic(self):
+    def create_topic(self, topic_name):
         while True:
             self.update_topics()
-            topic_name = input("\nEnter a topic or <q> to go back: ")
-            
+                
             # search for topic by name
-            search_topics = [self.topics[topic].upper() for topic in self.topics.keys()]
+            search_topics = [self.topics[topic]["title"].upper() for topic in self.topics.keys()]
             if topic_name.upper() in search_topics:
-                new_topic_name = input(f"Sorry, topic '{topic_name}' already exists. Press <b> to enter another topic, or <q> to quit to the previous menu.")
+                new_topic_name = input(f"Sorry, topic '{topic_name}' already exists. Please enter another topic, or <q> to quit to the previous menu.")
 
                 if new_topic_name[0].upper() == "Q":
                     return
 
                 elif new_topic_name[0].upper() == "B":
-                    continue
+                    self.create_topic(new_topic_name)
 
             elif topic_name.upper() == "Q":
                 return
@@ -87,7 +86,8 @@ class ObsidianVault:
             else:
                 action = input(f"Ready to create topic: '{topic_name}'? (Y/N) ")
                 if action.upper() == "N":
-                    continue
+                    return
+
                 else:
                     # default category to Library. 
                     # TODO Add category selection option.
@@ -98,7 +98,8 @@ class ObsidianVault:
                     new_topic_path = Path(self.vault_folder, r"06_Library",new_topic_name)
                     with open(new_topic_path,"w") as f:
                         f.write(self.file_heading.format(new_topic_id,"topic",topic_name,topic_name))
-                    print(f"Topic: '{new_topic_name} created.")                  
+                    print(f"Topic: '{new_topic_name} created.")   
+                    return               
                     
     def process_files(self,folder):
         """
@@ -110,24 +111,26 @@ class ObsidianVault:
         Please select an option: """
 
         for file in Path(folder).iterdir():
-            print(f"\nCurrent file: {file.name}")
-            while True:
+             print(f"\nCurrent file: {file.name}")
+             while True:
                 response = input(file_menu)
                 if response[0].upper() == "Q":
                     print("Goodbye!")
                     sys.exit()
 
                 elif response[0].upper() == "S":
+                    # break out of the 'while' loop and go back to the top of the 'for' loop
                     break
 
                 elif response[0].upper() == "V":
                     os.startfile(file)
 
                 elif response[0].upper() == "C":
-                    self.create_topic()
+                    new_topic = input("Enter a topic: ")
+                    self.create_topic(new_topic)
 
                 elif response[0].upper() == "T":
-                    assign_topic = input("Enter topic Id (NN.NN): ")
+                    assign_topic = input("Enter topic ID (NN.NN): ")
                     # search for topic by topic_id
                     if assign_topic in self.topics.keys():
                         new_counter = int(max(self.topics[assign_topic]["counters"])) + 1
@@ -136,6 +139,7 @@ class ObsidianVault:
                         new_file_path = Path(self.vault_folder,"06_Library",new_file_name)
                         file.rename(new_file_path)
                         print(f"New file: '{new_file_path}' added.")
+                        break
 
 
 
