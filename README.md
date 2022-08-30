@@ -67,8 +67,9 @@ A heading for a Category file will have topic 00 and counter 000.  Example:
 
 #### Summary
 
-- Example filing system: a folder containg the following files:
+- Example filing system: a folder containing the following files:
 
+```
     02.00.000_Filing_Cabinet.md                    --> This file specifies a category, which in this case is numbered '02.
     02.01.000_My_Awesome_Files.md                  --> This file specifies a topic within a category.
     02.01.001_An_Awesome_File.pdf                  --> A file with a category and topic
@@ -76,6 +77,7 @@ A heading for a Category file will have topic 00 and counter 000.  Example:
     02.02.000_Homework.md                          --> Another topic in the category 'Filing Cabinet." 
     02.02.001_Notes_for_Final_Exam.pdf
     02.02.002_When_Homework_Becomes_Dog_Food.pdf
+```
 
 - This numbering system ensures that the files in a folder will always sort neatly by category and topic.
 
