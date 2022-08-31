@@ -278,18 +278,18 @@ def zim_to_md(zim_file,dest_dir):
     
     # remove date string from start of file, and save it for the task line
     if re.match("^2022\-[0-9][0-9]\-[0-9][0-9]",zim_file.name) != None:
-        file_date_string = zim_file.name[:10]     
-        new_file_name = zim_file.name[11:]
+        file_date_string = zim_file.stem[:10]     
+        new_file_name = zim_file.stem[11:]
     
     else:
         file_date_string = ""
-        new_file_name = zim_file.name
+        new_file_name = zim_file.stem
 
     new_file_name = new_file_name.replace("_"," ")
 
     # IChange file title to file name
     # TODO Make this option configurable
-    new_file_title = "# " + new_file_name[:len(new_file_name)-3]
+    new_file_title = "# " + new_file_name
     
     new_content = []
 
@@ -297,13 +297,12 @@ def zim_to_md(zim_file,dest_dir):
 
         # Exclude lines with ZimWiki headings
         if "Page ID" not in line[:10] \
-            and "Created " not in line [:7] \
             and "Content-Type:" not in line \
             and "Wiki-Format:" not in line \
             and "Creation-Date:" not in line:
 
             # Replace the title line so it matches the file  name
-            if "======" in line[:7]:
+            if "======" in line[:10]:
                 new_line = new_file_title
 
             elif re.match("^={2,}",line) != None:
@@ -311,17 +310,22 @@ def zim_to_md(zim_file,dest_dir):
             
             else:
                 # Convert check boxes and bullet points
-                new_line = line.replace("[*] ",completed_task + file_date_string)
-                new_line = new_line.replace("[ ] ",open_task + file_date_string)
-                new_line = new_line.replace("* ","- ")
+                if "[*] " in line[:4]:
+                    new_line = completed_task + file_date_string
 
-        new_content.append(new_line)
+                elif "[ ] " in line[:4]:
+                    new_line = open_task + file_date_string
 
-    new_content = "\n".join(content)
+                else:    
+                    new_line = line.replace("* ","- ")
+
+            new_content.append(new_line)
+
+    new_content = "\n".join(new_content)
     
     # remove extra lines
     new_content = new_content.replace("\n\n","\n")
-    new_file_path = Path(dest_dir,new_file_name)
+    new_file_path = Path(dest_dir,new_file_name + ".md")
     with open(new_file_path,"w",encoding="utf-8") as f:
         f.write(new_content)
     

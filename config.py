@@ -4,6 +4,8 @@ from pathlib import Path
 if os.environ['COMPUTERNAME'] == 'DESKTOP-JNCQ9MB':
     vault_folder = Path(r"C:\Users\robf.PCS\Documents\DevNotes")
     projects = Path(r"C:\Users\robf.PCS\Documents\DevNotes\Projects\2022")
+    old_projects = Path(r"C:\Users\robf.PCS\Documents\Notebook\Home\Projects\2022")
+
     converted_projects = Path(r"C:\Users\robf.PCS\Documents\converted_projects")
     
 
