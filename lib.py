@@ -303,7 +303,7 @@ def zim_to_md(zim_file,dest_dir):
 
             # Replace the title line so it matches the file  name
             if "======" in line[:10]:
-                new_line = new_file_title
+                new_line = new_file_title + "\n" + completed_task + file_date_string
 
             elif re.match("^={2,}",line) != None:
                 new_line = convert_zim_header(line)
@@ -311,10 +311,10 @@ def zim_to_md(zim_file,dest_dir):
             else:
                 # Convert check boxes and bullet points
                 if "[*] " in line[:4]:
-                    new_line = completed_task + file_date_string
+                    new_line = new_line.replace("[*] ",completed_task)
 
                 elif "[ ] " in line[:4]:
-                    new_line = open_task + file_date_string
+                    new_line = new_line.replace("[ ] ",open_task)
 
                 else:    
                     new_line = line.replace("* ","- ")
