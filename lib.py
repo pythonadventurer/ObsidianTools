@@ -98,7 +98,9 @@ class ObsidianVault:
                         f.write(self.file_heading.format(new_topic_id,"topic",topic_name,topic_name))
                     print(f"Topic: '{new_topic_name} created.")
                     self.update_topics()   
-                    return               
+                    return    
+    def remove_tag(self, vault_folder):
+                   
 
     def assign_topic(self,file, topic_id):
         # search for topic by topic_id
@@ -268,65 +270,60 @@ def convert_zim_header(zim_header):
         return None
 
 def zim_to_md(zim_file,dest_dir):
-    # removes date string from beginning of file.
-
-    completed_task = "- [x] #task 📅 "
-    open_task = "- [ ] #task 📅 "
-
     with open(zim_file,"r",encoding='utf-8') as f:
         content = f.read().split("\n")
-    
-    # remove date string from start of file, and save it for the task line
-    if re.match("^2022\-[0-9][0-9]\-[0-9][0-9]",zim_file.name) != None:
-        file_date_string = zim_file.stem[:10]     
-        new_file_name = zim_file.stem[11:]
-    
-    else:
-        file_date_string = ""
-        new_file_name = zim_file.stem
-
-    new_file_name = new_file_name.replace("_"," ")
-
-    # IChange file title to file name
-    # TODO Make this option configurable
-    new_file_title = "# " + new_file_name
     
     new_content = []
 
     for line in content:
-
+    
         # Exclude lines with ZimWiki headings
         if "Page ID" not in line[:10] \
             and "Content-Type:" not in line \
             and "Wiki-Format:" not in line \
             and "Creation-Date:" not in line:
 
-            # Replace the title line so it matches the file  name
-            if "======" in line[:10]:
-                new_line = new_file_title + "\n" + completed_task + file_date_string
-
-            elif re.match("^={2,}",line) != None:
+            if re.match("^={2,}",line) != None:
                 new_line = convert_zim_header(line)
             
             else:
                 # Convert check boxes and bullet points
-                if "[*] " in line[:4]:
-                    new_line = new_line.replace("[*] ",completed_task)
+                if "[*] " in line:
+                    new_line = line.replace("[*] ","- [x] ")
 
-                elif "[ ] " in line[:4]:
-                    new_line = new_line.replace("[ ] ",open_task)
+                elif "[ ] " in line:
+                    new_line = line.replace("[ ] ","- [ ] ")
 
-                else:    
+                elif "* " in line:    
                     new_line = line.replace("* ","- ")
+
+                else:
+                    new_line = line
 
             new_content.append(new_line)
 
     new_content = "\n".join(new_content)
-    
-    # remove extra lines
-    new_content = new_content.replace("\n\n","\n")
-    new_file_path = Path(dest_dir,new_file_name + ".md")
+    new_file_path = Path(dest_dir,zim_file.stem + ".md")
     with open(new_file_path,"w",encoding="utf-8") as f:
         f.write(new_content)
     
-    print(f"Created file: {new_file_name}")
+    print(f"Created file: {new_file_path}")
+
+def add_tag(folder,tag_text):
+    # Append a tag to all files in a folder.
+    for item in Path(folder).iterdir():
+        if item.is_file:
+            with open(item,"a") as f:
+                f.write(f"#{tag_text.replace(' ','_')}\n")
+                print(f"Added tag to: {item.name}")
+
+def fix_tag(folder):
+    for item in Path(folder).iterdir():
+        if item.is_file:
+            with open(item,"r") as f:
+                content = f.read()
+            content = content.replace("# Projects","")
+            with open(item,"w") as f:
+                f.write(content)
+            
+            print(f"Fixed tag in item: {item.name}")

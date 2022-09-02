@@ -3,9 +3,8 @@ from pathlib import Path
 
 if os.environ['COMPUTERNAME'] == 'DESKTOP-JNCQ9MB':
     vault_folder = Path(r"C:\Users\robf.PCS\Documents\DevNotes")
-    projects = Path(r"C:\Users\robf.PCS\Documents\DevNotes\Projects\2022")
+    projects = Path(r"C:\Users\Robf.DESKTOP-JNCQ9MB\Documents\DevNotes\Projects")
     old_projects = Path(r"C:\Users\robf.PCS\Documents\Notebook\Home\Projects\2022")
-
     converted_projects = Path(r"C:\Users\robf.PCS\Documents\converted_projects")
     
 
@@ -13,4 +12,6 @@ else:
     vault_folder = Path(r"D:\Rob\Compendium")
 
 to_file = Path(vault_folder, r"06_Library\TO_FILE")
+completed_task = "- [x] #task 📅 "
+open_task = "- [ ] #task 📅 "
 
