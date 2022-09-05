@@ -142,6 +142,7 @@ class ObsidianNote:
         self.metadata = self.get_metadata()
         self.title = self.get_title()
         self.content = self.get_content()
+ 
         self.links = self.get_links()
 
     def read_file(self,file_path):
@@ -151,14 +152,16 @@ class ObsidianNote:
         with open(file_path,"r") as f:
             return f.read()
 
+
     def update_text(self):
         """
         Update the text with any changes made.
         """
         self.frontmatter = self.update_frontmatter()
-        new_text = self.frontmatter + "# " + self.title + self.content
+        new_text = self.frontmatter + self.title + self.content
         return new_text
-        
+
+
     def save(self):
         """
         Write out the file
@@ -166,7 +169,8 @@ class ObsidianNote:
         self.text = self.update_text()
         with open(self.file_path,"w") as f:
             f.write(self.text)
-        
+
+
     def get_frontmatter(self):
         """
         Frontmater string
@@ -176,23 +180,31 @@ class ObsidianNote:
         frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
         return frontmatter
 
+
     def get_metadata(self):
         """
         Metadata dict from frontmatter
         """
         metadata_dict = {}
-        frontmatter = self.text.split("---")[1].split(": ")
-        frontmatter =  ",".join(frontmatter)
+        frontmatter = self.text.split("---")[1]
         frontmatter = frontmatter.split("\n")
 
         for item in frontmatter:
             if item != '':
-                metadata_dict[item[:item.find(",")]] = item[item.find(",")+1:]
-        for key in metadata_dict.keys():
-            if key == "tags":
-                metadata_dict[key] = metadata_dict[key][1:len(metadata_dict[key])-1]   
-                metadata_dict[key] = metadata_dict[key].split(",")
+                if "created: " in item:
+                    metadata_dict["created"] = item[8:].strip()
+                else:
+                    new_item = item.split(":")
+                    metadata_dict[new_item[0]] = new_item[1].strip()
+        
+        tags = metadata_dict["tags"][1:len(metadata_dict["tags"])-1].split(",")
+        tags = [tag.strip() for tag in tags]
+        if '' in tags:
+            tags.remove('')
+
+        metadata_dict["tags"] = tags
         return metadata_dict
+
 
     def update_frontmatter(self):
         """
@@ -202,11 +214,12 @@ class ObsidianNote:
         for key in self.metadata.keys():
             new_frontmatter += key + ": "
             if key.upper() == "TAGS":
-                new_frontmatter += str(self.metadata[key]) + "\n"
+                new_frontmatter += str(self.metadata[key]).replace("'","") + "\n"
             else:     
                 new_frontmatter += self.metadata[key] + "\n"
         new_frontmatter += "---\n"
         return new_frontmatter
+
 
     def get_content(self):
         """
@@ -217,6 +230,7 @@ class ObsidianNote:
             return self.text[len(self.frontmatter):]
         else:
             return self.text[len(self.frontmatter) + len(title)+3:]
+
 
     def get_title(self):
         """
@@ -254,7 +268,8 @@ class ObsidianNote:
             self.text = self.update_text()
         except ValueError:
             print(f"Tag: '{tag_name} does not exist.")
-            
+
+
     def delete_tags(self):
         self.metadata["tags"] = []
         self.text = self.update_text()
