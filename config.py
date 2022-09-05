@@ -8,7 +8,8 @@ if os.environ['COMPUTERNAME'] == 'DESKTOP-JNCQ9MB':
     
 
 else:
-    vault_folder = Path(r"D:\Rob\Compendium")
+    vault_folder = Path(r"D:\Rob\Vault")
 
-to_file = Path(vault_folder, r"06_Library\TO_FILE")
-
+to_file = Path(r"D:\Rob\_TO_BE_FILED\Library")
+resource_folder = Path(r"D:\Rob\_TO_BE_FILED\Resources")
+resource_catalog = Path(r"D:\Rob\Vault\Resources\Resource_Catalog")
