@@ -1,8 +1,7 @@
+from argparse import MetavarTypeHelpFormatter
 from pathlib import Path
 import re
-import sys
-import os
-
+import csv
 
 def convert_zim_header(zim_header):
     '''
@@ -103,7 +102,7 @@ def add_tag(md_file,tag):
             print(f"Added tag '{tag}' to file {md_file.name}")
 
     
-def fix_titles(md_file):
+def fix_title(md_file):
     # match titles with filenames.
     with open(md_file,"r") as f:
         content = f.read()
@@ -114,5 +113,158 @@ def fix_titles(md_file):
     print(f"Corrected title in: {md_file.name}")
 
 
+def resource_files_list(resource_folder,target_file):
+    resource_list = [[file.name, str(file)] for file in Path(resource_folder).iterdir()]
+    with open(target_file,"w",newline="",encoding="utf-8") as f:
+        list_writer = csv.writer(f)
+        list_writer.writerows(resource_list)
 
 
+def add_resource(resource_file,tag, target_path):
+    # Add a resource file to vault and tag it.
+    # with open("resource_tag_list","r") as csv_file:
+    #     csv_reader = csv.DictReader(csv_file)
+    moved_file = Path(Path(target_path), Path(resource_file).name)
+    resource_file.replace(moved_file)
+    print(f"Added file: {Path(resource_file).name}")
+    meta_file_name = "INFO_" + resource_file.stem + "_" + resource_file.suffix[1:].upper() + ".md"
+    print(f"Meta file: {meta_file_name}")
+
+
+class ObsidianNote:
+    """
+    Read, create and edit Obisidian notes.
+    """
+    def __init__(self,file_path):
+        self.file_path = Path(file_path)
+        self.text = self.read_file(self.file_path)
+        self.frontmatter = self.get_frontmatter()
+        self.metadata = self.get_metadata()
+        self.title = self.get_title()
+        self.content = self.get_content()
+        self.links = self.get_links()
+
+    def read_file(self,file_path):
+        """
+        Read the selected file_name in NotesFolder
+        """
+        with open(file_path,"r") as f:
+            return f.read()
+
+    def update_text(self):
+        """
+        Update the text with any changes made.
+        """
+        self.frontmatter = self.update_frontmatter()
+        new_text = self.frontmatter + "# " + self.title + self.content
+        return new_text
+        
+    def save(self):
+        """
+        Write out the file
+        """
+        self.text = self.update_text()
+        with open(self.file_path,"w") as f:
+            f.write(self.text)
+        
+    def get_frontmatter(self):
+        """
+        Frontmater string
+        """
+        frontmatter_start = self.text.find("---")
+        frontmatter_end = self.text.find("---",frontmatter_start + 1)
+        frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
+        return frontmatter
+
+    def get_metadata(self):
+        """
+        Metadata dict from frontmatter
+        """
+        metadata_dict = {}
+        frontmatter = self.text.split("---")[1].split(": ")
+        frontmatter =  ",".join(frontmatter)
+        frontmatter = frontmatter.split("\n")
+
+        for item in frontmatter:
+            if item != '':
+                metadata_dict[item[:item.find(",")]] = item[item.find(",")+1:]
+        for key in metadata_dict.keys():
+            if key == "tags":
+                metadata_dict[key] = metadata_dict[key][1:len(metadata_dict[key])-1]   
+                metadata_dict[key] = metadata_dict[key].split(",")
+        return metadata_dict
+
+    def update_frontmatter(self):
+        """
+        Update the frontmatter string from the dict
+        """
+        new_frontmatter = "---\n"
+        for key in self.metadata.keys():
+            new_frontmatter += key + ": "
+            if key.upper() == "TAGS":
+                new_frontmatter += str(self.metadata[key]) + "\n"
+            else:     
+                new_frontmatter += self.metadata[key] + "\n"
+        new_frontmatter += "---\n"
+        return new_frontmatter
+
+    def get_content(self):
+        """
+        content except metadata and title, if present
+        """
+        title = self.get_title()
+        if title == "":
+            return self.text[len(self.frontmatter):]
+        else:
+            return self.text[len(self.frontmatter) + len(title)+3:]
+
+    def get_title(self):
+        """
+        Title of the file. Must be first line of content and start with "# ".
+        """
+        title = self.text[len(self.frontmatter)+1:]
+        if title[:2] == "# ":
+            title = self.text[self.text.find("# "):self.text.find("\n",self.text.find("# ")+1)].replace("# ","")
+        else:
+            title = ""
+        
+        return title
+
+
+    def get_links(self):
+        """
+        List of links in the note content
+        """
+        links = []
+        for line in self.text.split("\n"):
+            match = re.match("!\[\[.+\]\]|\[\[.+\]\]",line)
+            if match != None:
+                links.append(match[0])
+        return links
+
+
+    def add_tag(self,tag_name):
+        self.metadata["tags"].append(tag_name)
+        self.text = self.update_text()
+
+
+    def remove_tag(self,tag_name):
+        try:
+            self.metadata["tags"].remove(tag_name)
+            self.text = self.update_text()
+        except ValueError:
+            print(f"Tag: '{tag_name} does not exist.")
+            
+    def delete_tags(self):
+        self.metadata["tags"] = []
+        self.text = self.update_text()
+
+
+    def set_title(self,title_text):
+        self.title = "# " + title_text
+
+
+
+
+    
+    
