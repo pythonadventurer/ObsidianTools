@@ -2,6 +2,8 @@ from argparse import MetavarTypeHelpFormatter
 from pathlib import Path
 import re
 import csv
+from time import sleep
+
 
 def convert_zim_header(zim_header):
     '''
@@ -80,7 +82,6 @@ def zim_to_md(zim_file,dest_dir):
     
     print(f"Created file: {new_file_name}")
 
-
 def remove_file_ids(folder):
     '''
     Remove all file IDs from files.
@@ -90,46 +91,11 @@ def remove_file_ids(folder):
         item.rename(new_name)
         print(new_name)
 
-
-def add_tag(md_file,tag):
-    with open(Path(md_file),"r") as f:
-        content = f.read()
-        if "tags: []" in content:
-            content = content.replace("tags: []",f"tags: [{tag}]")
-            with open(Path(md_file),"w") as f:
-                f.write(content)     
-
-            print(f"Added tag '{tag}' to file {md_file.name}")
-
-    
-def fix_title(md_file):
-    # match titles with filenames.
-    with open(md_file,"r") as f:
-        content = f.read()
-        current_title = content[content.find("# [[")+4:content.find("]]")]
-    content = content.replace("# [[" + current_title + "]]","# " + md_file.stem)    
-    with open(md_file,"w") as f:
-        f.write(content)
-    print(f"Corrected title in: {md_file.name}")
-
-
 def resource_files_list(resource_folder,target_file):
     resource_list = [[file.name, str(file)] for file in Path(resource_folder).iterdir()]
     with open(target_file,"w",newline="",encoding="utf-8") as f:
         list_writer = csv.writer(f)
         list_writer.writerows(resource_list)
-
-
-def add_resource(resource_file,tag, target_path):
-    # Add a resource file to vault and tag it.
-    # with open("resource_tag_list","r") as csv_file:
-    #     csv_reader = csv.DictReader(csv_file)
-    moved_file = Path(Path(target_path), Path(resource_file).name)
-    resource_file.replace(moved_file)
-    print(f"Added file: {Path(resource_file).name}")
-    meta_file_name = "INFO_" + resource_file.stem + "_" + resource_file.suffix[1:].upper() + ".md"
-    print(f"Meta file: {meta_file_name}")
-
 
 class ObsidianNote:
     """
@@ -170,7 +136,6 @@ class ObsidianNote:
         with open(self.file_path,"w") as f:
             f.write(self.text)
 
-
     def get_frontmatter(self):
         """
         Frontmater string
@@ -179,7 +144,6 @@ class ObsidianNote:
         frontmatter_end = self.text.find("---",frontmatter_start + 1)
         frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
         return frontmatter
-
 
     def get_metadata(self):
         """
@@ -205,7 +169,6 @@ class ObsidianNote:
         metadata_dict["tags"] = tags
         return metadata_dict
 
-
     def update_frontmatter(self):
         """
         Update the frontmatter string from the dict
@@ -220,7 +183,6 @@ class ObsidianNote:
         new_frontmatter += "---\n"
         return new_frontmatter
 
-
     def get_content(self):
         """
         content except metadata and title, if present
@@ -230,7 +192,6 @@ class ObsidianNote:
             return self.text[len(self.frontmatter):]
         else:
             return self.text[len(self.frontmatter) + len(title)+3:]
-
 
     def get_title(self):
         """
@@ -244,7 +205,6 @@ class ObsidianNote:
         
         return title
 
-
     def get_links(self):
         """
         List of links in the note content
@@ -256,11 +216,9 @@ class ObsidianNote:
                 links.append(match[0])
         return links
 
-
     def add_tag(self,tag_name):
         self.metadata["tags"].append(tag_name)
         self.text = self.update_text()
-
 
     def remove_tag(self,tag_name):
         try:
@@ -269,17 +227,26 @@ class ObsidianNote:
         except ValueError:
             print(f"Tag: '{tag_name} does not exist.")
 
-
     def delete_tags(self):
         self.metadata["tags"] = []
         self.text = self.update_text()
-
 
     def set_title(self,title_text):
         self.title = "# " + title_text
 
 
+class ObsidianResource:
+    def __init__(self,file_path):
+        self.file_path = Path(file_path)
+        self.metadata_file = self.get_metadata_file()
 
+    def move_to_vault(self,vault_path):
+        pass
 
+    def get_metadata_file(self):
+        return "INFO_" + self.file_path.stem + "_" + \
+            self.file_path.suffix[1:].upper()
+
+    
     
     
