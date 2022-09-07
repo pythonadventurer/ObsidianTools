@@ -124,6 +124,8 @@ class ObsidianNote:
         Update the text with any changes made.
         """
         self.frontmatter = self.update_frontmatter()
+        if "# " not in self.title:
+            self.title = "# " + self.title
         new_text = self.frontmatter + self.title + self.content
         return new_text
 
