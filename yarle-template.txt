@@ -1,0 +1,10 @@
+---
+category: Exercise Log
+tags: []
+{created-at-block}created: {created-at}{end-created-at-block}
+---
+
+{title-block}# {title}{end-title-block}
+
+{content-block}{content}{end-content-block}
+
