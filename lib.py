@@ -109,15 +109,20 @@ class ObsidianNote:
         self.title = self.get_title()
         self.content = self.get_content()
  
-        self.links = self.get_links()
+        # self.links = self.get_links()
 
     def read_file(self,file_path):
         """
         Read the selected file_name in NotesFolder
         """
-        with open(file_path,"r") as f:
-            return f.read()
+        try:
+            with open(file_path,"r") as f:
+                return f.read()
 
+        except UnicodeDecodeError:
+            with open(file_path,"r",encoding="utf-8") as f:
+                return f.read()
+                
 
     def update_text(self):
         """
@@ -135,16 +140,20 @@ class ObsidianNote:
         Write out the file
         """
         self.text = self.update_text()
-        with open(self.file_path,"w") as f:
+        with open(self.file_path,"w",encoding="utf-8") as f:
             f.write(self.text)
 
     def get_frontmatter(self):
         """
-        Frontmater string
+        Frontmatter string
         """
-        frontmatter_start = self.text.find("---")
-        frontmatter_end = self.text.find("---",frontmatter_start + 1)
-        frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
+        try:
+            frontmatter_start = self.text.find("---")
+            frontmatter_end = self.text.find("---",frontmatter_start + 1)
+            frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
+        except IndexError:
+            frontmatter = None
+
         return frontmatter
 
     def get_metadata(self):
@@ -152,38 +161,44 @@ class ObsidianNote:
         Metadata dict from frontmatter
         """
         metadata_dict = {}
-        frontmatter = self.text.split("---")[1]
-        frontmatter = frontmatter.split("\n")
+        if self.frontmatter != None:
+            frontmatter = self.text.split("---")[1]
+            frontmatter = frontmatter.split("\n")
 
-        for item in frontmatter:
-            if item != '':
-                if "created: " in item:
-                    metadata_dict["created"] = item[8:].strip()
-                else:
-                    new_item = item.split(":")
-                    metadata_dict[new_item[0]] = new_item[1].strip()
-        
-        tags = metadata_dict["tags"][1:len(metadata_dict["tags"])-1].split(",")
-        tags = [tag.strip() for tag in tags]
-        if '' in tags:
-            tags.remove('')
+            for item in frontmatter:
+                if item != '':
+                    if "created: " in item:
+                        metadata_dict["created"] = item[8:].strip()
+                    else:
+                        new_item = item.split(":")
+                        metadata_dict[new_item[0]] = new_item[1].strip()
+            
+            tags = metadata_dict["tags"][1:len(metadata_dict["tags"])-1].split(",")
+            tags = [tag.strip() for tag in tags]
+            if '' in tags:
+                tags.remove('')
 
-        metadata_dict["tags"] = tags
-        return metadata_dict
+            metadata_dict["tags"] = tags
+            return metadata_dict
+        else:
+            return None
 
     def update_frontmatter(self):
         """
         Update the frontmatter string from the dict
         """
-        new_frontmatter = "---\n"
-        for key in self.metadata.keys():
-            new_frontmatter += key + ": "
-            if key.upper() == "TAGS":
-                new_frontmatter += str(self.metadata[key]).replace("'","") + "\n"
-            else:     
-                new_frontmatter += self.metadata[key] + "\n"
-        new_frontmatter += "---\n"
-        return new_frontmatter
+        if self.metadata != None:
+            new_frontmatter = "---\n"
+            for key in self.metadata.keys():
+                new_frontmatter += key + ": "
+                if key.upper() == "TAGS":
+                    new_frontmatter += str(self.metadata[key]).replace("'","") + "\n"
+                else:     
+                    new_frontmatter += self.metadata[key] + "\n"
+            new_frontmatter += "---\n"
+            return new_frontmatter
+        else:
+            print("File has no frontmatter.")
 
     def get_content(self):
         """
