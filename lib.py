@@ -134,6 +134,20 @@ class ObsidianNote:
         new_text = self.frontmatter + self.title + self.content
         return new_text
 
+    def remove_frontmatter(self):
+        """
+        Move creation date and tags out of frontmatter into the content.
+        """
+        self.add_tag("Exercise_Log")
+
+        created_date = "Created: " + self.metadata["created"] + "\n"
+        new_tags = "Tags: "
+        for tag in self.metadata["tags"]:
+            new_tags += "#" + tag + " "
+        new_tags += "\n"
+        self.text = "# " + self.title + "\n\n" + created_date + new_tags + self.content
+        with open(self.file_path,"w",encoding="utf-8") as f:
+            f.write(self.text)        
 
     def save(self):
         """
@@ -173,12 +187,17 @@ class ObsidianNote:
                         new_item = item.split(":")
                         metadata_dict[new_item[0]] = new_item[1].strip()
             
-            tags = metadata_dict["tags"][1:len(metadata_dict["tags"])-1].split(",")
-            tags = [tag.strip() for tag in tags]
-            if '' in tags:
-                tags.remove('')
+            try:
+                tags = metadata_dict["tags"][1:len(metadata_dict["tags"])-1].split(",")
+                tags = [tag.strip() for tag in tags]
+                if '' in tags:
+                    tags.remove('')
 
-            metadata_dict["tags"] = tags
+                metadata_dict["tags"] = tags
+
+            except KeyError:
+                metadata_dict["tags"] = []
+
             return metadata_dict
         else:
             return None
@@ -235,7 +254,7 @@ class ObsidianNote:
 
     def add_tag(self,tag_name):
         self.metadata["tags"].append(tag_name)
-        self.text = self.update_text()
+        # self.text = self.update_text()
 
     def remove_tag(self,tag_name):
         try:
