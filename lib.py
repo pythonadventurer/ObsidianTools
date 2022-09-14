@@ -100,7 +100,8 @@ def resource_files_list(resource_folder,target_file):
 
 class ObsidianNote:
     def __init__(self,file_path):
-        
+        self.file_path = file_path
+
         # If the file already exists, read its data.
         if file_path.exists():
             try:
@@ -117,6 +118,7 @@ class ObsidianNote:
                 self.frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
                 # print(self.frontmatter)
 
+                # create a dict of the frontmatter content
                 if self.frontmatter != None:
                     metadata_dict = {}
                     frontmatter = self.text.split("---")[1]
@@ -142,20 +144,45 @@ class ObsidianNote:
                         metadata_dict["tags"] = []
 
                     self.metadata = metadata_dict
-                else:
-                    return None
-
+        
 
             except IndexError:
                 self.frontmatter = None
 
-            self.title = self.text[self.text.find("# "):self.text.find("\n",self.text.find("# "))][2:]
+            # title = the first line starting with '# ' after the front matter
+            self.title = self.text[self.text.find("# ",frontmatter_end):self.text.find("\n",self.text.find("# ",frontmatter_end))][2:]
+            
+            # content = everything after the title
             self.content = self.text[self.text.find("\n",self.text.find("# "))+1:]
-            # print(self.content)
-
 
         else:
             self.text = None
+
+    def update(self):
+        # write metadata, title and content to the file
+        
+        # Update the frontmatter string from the dict
+        if self.metadata != None:
+            new_frontmatter = "---\n"
+            for key in self.metadata.keys():
+                new_frontmatter += key + ": "
+                if key.upper() == "TAGS":
+                    new_frontmatter += str(self.metadata[key]).replace("'","") + "\n"
+                else:     
+                    new_frontmatter += self.metadata[key] + "\n"
+            new_frontmatter += "---\n"
+        else:
+            new_frontmatter = ""
+
+        with open(self.file_path,"w",encoding="utf-8") as f:
+            f.write(new_frontmatter)
+            f.write(" #" + self.title)
+            f.write(self.content)
+
+    def remove_frontmatter(self):
+        self.metadata = None
+        self.update()
+
 
 # class ObsidianNote:
 #     """
