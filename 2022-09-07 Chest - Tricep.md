@@ -1,6 +1,7 @@
 ---
 category: Exercise Log
 created: 2022-09-07 06:58:56
+tags: [Exercise_Log, Upper_Body]
 ---
 # 2022-09-07 Chest - Tricep
 

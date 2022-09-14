@@ -2,9 +2,26 @@ from config import *
 from lib import *
 from pathlib import Path
 
-my_file = ObsidianNote(Path(r"2022-09-07 Chest - Tricep.md"))
-print(my_file.title)
-print(my_file.metadata)
+target_dir = Path(r"D:\Rob\Vault\03 Notes")
+
+for item in target_dir.iterdir():
+    if item.is_file():
+        new_file = ObsidianNote(item)
+        new_file.tags_to_content()
+        print(item.name)
+        
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

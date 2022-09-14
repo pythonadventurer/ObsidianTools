@@ -109,8 +109,14 @@ class ObsidianNote:
                     self.text = f.read()
 
             except UnicodeDecodeError:
-                with open(file_path,"r",encoding="utf-8") as f:
-                    self.text =  f.read()
+                try:
+                    with open(file_path,"r",encoding="utf-8") as f:
+                        self.text =  f.read()
+                except UnicodeDecodeError:
+                    print("File: " + file_path.name + " has thrown a Unicode fit.")
+                    
+
+                
 
             try:
                 frontmatter_start = self.text.find("---")
@@ -144,7 +150,19 @@ class ObsidianNote:
                         metadata_dict["tags"] = []
 
                     self.metadata = metadata_dict
-        
+
+                    # tags as a single line string
+                    if self.metadata["tags"] != []:
+                        tags = ""
+                        for tag in self.metadata["tags"]:
+                            tags += "#" + tag + " "
+                        self.tags = tags
+                    else:
+                        self.tags = ""
+
+                    if "created" in self.metadata.keys():
+                        self.created = self.metadata["created"]
+
 
             except IndexError:
                 self.frontmatter = None
@@ -174,189 +192,48 @@ class ObsidianNote:
         else:
             new_frontmatter = ""
 
+
         with open(self.file_path,"w",encoding="utf-8") as f:
             f.write(new_frontmatter)
-            f.write(" #" + self.title)
+            f.write("# " + self.title + "\n") 
             f.write(self.content)
 
     def remove_frontmatter(self):
         self.metadata = None
         self.update()
+    
+    def set_title(self,new_title):
+        self.title = new_title
+        self.update()
 
+    def fix_title(self):
+        '''
+        Set the title to match the filename.
+        '''
+        new_title = self.file_path.stem.replace("_"," ")
+        self.set_title(new_title)
 
-# class ObsidianNote:
-#     """
-#     Read, create and edit Obisidian notes.
-#     """
-#     def __init__(self,file_path):
-#         self.file_path = Path(file_path)
-#         self.text = self.read_file(self.file_path)
-#         self.frontmatter = self.get_frontmatter()
-#         self.metadata = self.get_metadata()
-#         self.title = self.get_title()
-#         self.content = self.get_content()
- 
-#         # self.links = self.get_links()
+    def tags_to_content(self):
+        """
+        Remove the front matter and add date created and tags to content,
+        below the title.
+        """
+        new_content = "# " + self.title + "\n\n"
+        new_content += "Created: " + self.created + "\n"
+        new_content += "Tags: " + self.tags + "\n\n"
+        new_content += self.content
+        with open(self.file_path,"w",encoding="utf-8") as f:
+            f.write(new_content)
+    
+    def update_tags(self,tags_string):
+        self.text = self.text.replace("Tags:","Tags: " + tags_string)
+        with open(self.file_path,"w",encoding="utf-8") as f:
+            f.write(self.text)
 
-#     def read_file(self,file_path):
-#         """
-#         Read the selected file_name in NotesFolder
-#         """
-#         try:
-#             with open(file_path,"r") as f:
-#                 return f.read()
-
-#         except UnicodeDecodeError:
-#             with open(file_path,"r",encoding="utf-8") as f:
-#                 return f.read()
-                
-
-#     def update_text(self):
-#         """
-#         Update the text with any changes made.
-#         """
-#         self.frontmatter = self.update_frontmatter()
-#         if "# " not in self.title:
-#             self.title = "# " + self.title
-#         new_text = self.frontmatter + self.title + self.content
-#         return new_text
-
-#     def remove_frontmatter(self):
-#         """
-#         Move creation date and tags out of frontmatter into the content.
-#         """
-#         self.add_tag("Exercise_Log")
-
-#         created_date = "Created: " + self.metadata["created"] + "\n"
-#         new_tags = "Tags: "
-#         for tag in self.metadata["tags"]:
-#             new_tags += "#" + tag + " "
-#         new_tags += "\n"
-#         self.text = "# " + self.title + "\n\n" + created_date + new_tags + self.content
-#         with open(self.file_path,"w",encoding="utf-8") as f:
-#             f.write(self.text)        
-
-#     def save(self):
-#         """
-#         Write out the file
-#         """
-#         self.text = self.update_text()
-#         with open(self.file_path,"w",encoding="utf-8") as f:
-#             f.write(self.text)
-
-#     def get_frontmatter(self):
-#         """
-#         Frontmatter string
-#         """
-#         try:
-#             frontmatter_start = self.text.find("---")
-#             frontmatter_end = self.text.find("---",frontmatter_start + 1)
-#             frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
-#         except IndexError:
-#             frontmatter = None
-
-#         return frontmatter
-
-#     def get_metadata(self):
-#         """
-#         Metadata dict from frontmatter
-#         """
-#         metadata_dict = {}
-#         if self.frontmatter != None:
-#             frontmatter = self.text.split("---")[1]
-#             frontmatter = frontmatter.split("\n")
-
-#             for item in frontmatter:
-#                 if item != '':
-#                     if "created: " in item:
-#                         metadata_dict["created"] = item[8:].strip()
-#                     else:
-#                         new_item = item.split(":")
-#                         metadata_dict[new_item[0]] = new_item[1].strip()
-            
-#             try:
-#                 tags = metadata_dict["tags"][1:len(metadata_dict["tags"])-1].split(",")
-#                 tags = [tag.strip() for tag in tags]
-#                 if '' in tags:
-#                     tags.remove('')
-
-#                 metadata_dict["tags"] = tags
-
-#             except KeyError:
-#                 metadata_dict["tags"] = []
-
-#             return metadata_dict
-#         else:
-#             return None
-
-#     def update_frontmatter(self):
-#         """
-#         Update the frontmatter string from the dict
-#         """
-#         if self.metadata != None:
-#             new_frontmatter = "---\n"
-#             for key in self.metadata.keys():
-#                 new_frontmatter += key + ": "
-#                 if key.upper() == "TAGS":
-#                     new_frontmatter += str(self.metadata[key]).replace("'","") + "\n"
-#                 else:     
-#                     new_frontmatter += self.metadata[key] + "\n"
-#             new_frontmatter += "---\n"
-#             return new_frontmatter
-#         else:
-#             print("File has no frontmatter.")
-
-#     def get_content(self):
-#         """
-#         content except metadata and title, if present
-#         """
-#         title = self.get_title()
-#         if title == "":
-#             return self.text[len(self.frontmatter):]
-#         else:
-#             return self.text[len(self.frontmatter) + len(title)+3:]
-
-#     def get_title(self):
-#         """
-#         Title of the file. Must be first line of content and start with "# ".
-#         """
-#         title = self.text[len(self.frontmatter)+1:]
-#         if title[:2] == "# ":
-#             title = self.text[self.text.find("# "):self.text.find("\n",self.text.find("# ")+1)].replace("# ","")
-#         else:
-#             title = ""
-        
-#         return title
-
-#     def get_links(self):
-#         """
-#         List of links in the note content
-#         """
-#         links = []
-#         for line in self.text.split("\n"):
-#             match = re.match("!\[\[.+\]\]|\[\[.+\]\]",line)
-#             if match != None:
-#                 links.append(match[0])
-#         return links
-
-#     def add_tag(self,tag_name):
-#         self.metadata["tags"].append(tag_name)
-#         # self.text = self.update_text()
-
-#     def remove_tag(self,tag_name):
-#         try:
-#             self.metadata["tags"].remove(tag_name)
-#             self.text = self.update_text()
-#         except ValueError:
-#             print(f"Tag: '{tag_name} does not exist.")
-
-#     def delete_tags(self):
-#         self.metadata["tags"] = []
-#         self.text = self.update_text()
-
-#     def set_title(self,title_text):
-#         self.title = "# " + title_text
-
+    def replace_text(self,old_text,new_text):
+        self.text = self.text.replace(old_text,new_text)     
+        with open(self.file_path,"w",encoding="utf-8") as f:
+            f.write(self.text)    
 
 
     
