@@ -2,11 +2,13 @@ from config import *
 from lib import *
 from pathlib import Path
 
-target_dir = Path(r"D:\Rob\my_vault")
 
+file = Path(r"2022-09-07 Chest - Tricep noFM.md")                     
 
+my_note = ObsidianNote(file)
 
-review_files(target_dir)                        
+print(my_note.content)
+
 
 
 
