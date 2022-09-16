@@ -91,12 +91,6 @@ def remove_file_ids(folder):
         item.rename(new_name)
         print(new_name)
 
-def resource_files_list(resource_folder,target_file):
-    resource_list = [[file.name, str(file)] for file in Path(resource_folder).iterdir()]
-    with open(target_file,"w",newline="",encoding="utf-8") as f:
-        list_writer = csv.writer(f)
-        list_writer.writerows(resource_list)
-
 
 class ObsidianNote:
     def __init__(self,file_path):
@@ -115,9 +109,6 @@ class ObsidianNote:
                 except UnicodeDecodeError:
                     print("File: " + file_path.name + " has thrown a Unicode fit.")
                     
-
-                
-
             try:
                 frontmatter_start = self.text.find("---")
                 frontmatter_end = self.text.find("---",frontmatter_start + 1)
@@ -163,14 +154,34 @@ class ObsidianNote:
                     if "created" in self.metadata.keys():
                         self.created = self.metadata["created"]
 
+                    else:
+                        self.created = ""
 
             except IndexError:
+                # Front matter not present.
                 self.frontmatter = None
+                self.metadata= None
 
+                # Extract creation date
+                if "Created: " in self.text:
+                    self.created = self.text[self.text.find("Created: ") + 9:self.text.find("\n", self.text.find("Created: "))]
+                else:
+                    self.created = ""
+
+                # Extract tags
+                if "Tags: " in self.text:
+                    tags_string = self.text[self.text.find("Tags:"):self.text.find("\n",self.text.find("Tags: ") + 6)]
+                    self.tags = [tag.strip() for tag in tags_string.split("#") if "Tags:" not in tag]
+                
+                else:
+                    self.tags = ""
+
+                
             # title = the first line starting with '# ' after the front matter
             self.title = self.text[self.text.find("# ",frontmatter_end):self.text.find("\n",self.text.find("# ",frontmatter_end))][2:]
             
             # content = everything after the title
+            # TODO Content needs to start AFTER the tag string.
             self.content = self.text[self.text.find("\n",self.text.find("# "))+1:]
 
         else:
@@ -192,10 +203,16 @@ class ObsidianNote:
         else:
             new_frontmatter = ""
 
-
         with open(self.file_path,"w",encoding="utf-8") as f:
-            f.write(new_frontmatter)
-            f.write("# " + self.title + "\n") 
+            if new_frontmatter != "":
+                f.write(new_frontmatter)
+            f.write("# " + self.title + "\n")
+            if self.created != "":
+                f.write("Created: " + self.created) 
+
+            if self.tags != "":
+                f.write(self.tags_string)
+
             f.write(self.content)
 
     def remove_frontmatter(self):
@@ -225,17 +242,31 @@ class ObsidianNote:
         with open(self.file_path,"w",encoding="utf-8") as f:
             f.write(new_content)
     
-    def update_tags(self,tags_string):
-        self.text = self.text.replace("Tags:","Tags: " + tags_string)
-        with open(self.file_path,"w",encoding="utf-8") as f:
-            f.write(self.text)
+    def tags_string(self):
+        tag_string = ""
+        for tag in self.tags:
+            tag_string += "#" + tag + " "
+        return tag_string
+
 
     def replace_text(self,old_text,new_text):
         self.text = self.text.replace(old_text,new_text)     
         with open(self.file_path,"w",encoding="utf-8") as f:
             f.write(self.text)    
 
+    
+    
+def review_files(target_dir):
+    """
+    Every Markdown file in the vault.
+    """
+    for item in target_dir.iterdir():
+        if item.is_file() and item.suffix == ".md":
+            new_file = ObsidianNote(item)
+            if new_file.tags == [] and "Templates" not in str(item.parent):
+                print(item.name)
 
-    
-    
-    
+
+
+        elif item.is_dir():
+            review_files(item)    
