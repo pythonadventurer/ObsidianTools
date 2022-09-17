@@ -5,6 +5,10 @@ tags: [Exercise_Log, Upper_Body]
 ---
 # 2022-09-07 Chest - Tricep
 
+Created: 2022-09-07 06:58:56
+Tags: #Exercise_Log #Upper_Body 
+
+
 Rest: 2 min.
 
 # Pushups

@@ -149,6 +149,9 @@ class ObsidianNote:
                             elif "tags: " in item:
                                 tags_string = item[7:len(item)-1].strip()
                                 self.tags = [tag.strip() for tag in tags_string.split(",") if "Tags:" not in tag]
+                    
+                    # If frontmatter present, then content starts after the title
+                    content_start = self.text.find("\n", self.text.find("# "))
 
             except IndexError:
                 # Front matter not present.
@@ -167,36 +170,30 @@ class ObsidianNote:
                 
                 else:
                     self.tags = []
-             
-            # title = the first line starting with '# ' after the front matter
-            self.title = self.text[self.text.find("# ",frontmatter_end):self.text.find("\n",self.text.find("# ",frontmatter_end))][2:]
-            if self.frontmatter == "":
-                content_start = len(self.title) + len(self.created) + 9 + len(self.tags_string()) + 6
-
-            else:
-                #TODO : Fix parsing of self.title
-                content_start = len(self.frontmatter) + 3 + len(self.title)
+                
+                # If no frontmatter, content starts after the tags line
+                content_start = self.text.find("\n", self.text.find("Tags: ")) + 1
+                
+            # title = the first line starting with '# ' 
+            self.title = self.text[self.text.find("# ") + 2:self.text.find("\n",self.text.find("# "))]
 
             self.content = self.text[content_start:]
-
-        
 
         else:
             self.text = None
 
-    def update(self):
+    def write_file(self):
         # write metadata, title and content to the file
 
         with open(self.file_path,"w",encoding="utf-8") as f:
             if self.frontmatter != "":
-                f.write(self.frontmatter) + "\n"
-            f.write("# " + self.title + "\n")
-            if self.created != "":
-                f.write("Created: " + self.created) + "\n"
-            if self.tags != "":
-                f.write("Tags: " + self.tags_string()) + "\n"
-
+                f.write(self.frontmatter + "\n")
+            f.write("# " + self.title + "\n\n")
+            f.write("Created: " + self.created + "\n")
+            f.write("Tags: " + self.tags_string() + "\n")
             f.write(self.content)
+
+
    
 
     def fix_title(self):
@@ -217,17 +214,3 @@ class ObsidianNote:
 
     
     
-def review_files(target_dir):
-    """
-    Every Markdown file in the vault.
-    """
-    for item in target_dir.iterdir():
-        if item.is_file() and item.suffix == ".md":
-            new_file = ObsidianNote(item)
-            if new_file.tags == [] and "Templates" not in str(item.parent):
-                print(item.name)
-
-
-
-        elif item.is_dir():
-            review_files(item)    
