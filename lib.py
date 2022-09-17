@@ -131,29 +131,28 @@ class ObsidianNote:
                 except UnicodeDecodeError:
                     print("File: " + file_path.name + " has thrown a Unicode fit.")
                     
-            try:
-                frontmatter_start = self.text.find("---")
-                frontmatter_end = self.text.find("---",frontmatter_start + 1)
-                self.frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
-                
+            
+            # check for frontmatter 
+            if self.text[:3] == "---":
+                self.frontmatter =  self.text[0:self.text.find("---",3)+3]
+            
                 # get the "Created" and "Tags" properties from the frontmatter.
-                if self.frontmatter != None:
-                    frontmatter = self.text.split("---")[1]
-                    frontmatter = frontmatter.split("\n")
+                frontmatter = self.frontmatter.split("---")[1]
+                frontmatter = frontmatter.split("\n")
 
-                    for item in frontmatter:
-                        if item != '':
-                            if "created: " in item:
-                                self.created = item[8:].strip()
-                            
-                            elif "tags: " in item:
-                                tags_string = item[7:len(item)-1].strip()
-                                self.tags = [tag.strip() for tag in tags_string.split(",") if "Tags:" not in tag]
-                    
-                    # If frontmatter present, then content starts after the title
-                    content_start = self.text.find("\n", self.text.find("# "))
+                for item in frontmatter:
+                    if item != '':
+                        if "created: " in item:
+                            self.created = item[8:].strip()
+                        
+                        elif "tags: " in item:
+                            tags_string = item[7:len(item)-1].strip()
+                            self.tags = [tag.strip() for tag in tags_string.split(",") if "Tags:" not in tag]
+                
+                # If frontmatter present, then content starts after the title
+                content_start = self.text.find("\n", self.text.find("# "))
 
-            except IndexError:
+            else:
                 # Front matter not present.
                 self.frontmatter = ""
                 
