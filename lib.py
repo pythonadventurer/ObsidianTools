@@ -212,4 +212,18 @@ class ObsidianNote:
 
 
     
-    
+def bulk_tag(tag, target_dir):
+    """
+    add tag to all untagged files
+    """
+    for item in Path(target_dir).iterdir():
+        if item.is_file() and item.suffix == ".md":
+            new_file = ObsidianNote(item)
+            if "Templates" not in str(item.parent) and new_file.tags == ['']:
+                print(item.name)
+                new_file.tags = [tag]
+                new_file.write_file()
+                
+        elif item.is_dir():
+            bulk_tag(tag, item)
+
