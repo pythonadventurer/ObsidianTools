@@ -1,8 +1,8 @@
-from argparse import MetavarTypeHelpFormatter
 from pathlib import Path
 import re
-import csv
 from time import sleep
+
+# (?<=\[\[).+?(?=\]\])
 
 
 def convert_zim_header(zim_header):
@@ -90,8 +90,6 @@ def remove_file_ids(folder):
         new_name = Path(folder,item.name[9:].replace("_"," "))
         item.rename(new_name)
         print(new_name)
-
-
 class ObsidianNote:
     """
     The text of an ObsidianNote (ObsidianNote.text) has the following parts:
@@ -192,9 +190,6 @@ class ObsidianNote:
             f.write("Tags: " + self.tags_string() + "\n")
             f.write(self.content)
 
-
-   
-
     def fix_title(self):
         '''
         Set the title to match the filename.
@@ -209,9 +204,44 @@ class ObsidianNote:
             tag_string += "#" + tag + " "
         return tag_string
 
+class ObsidianVault:
+    '''
+    For doing stuff that applies to a complete Obsidian vault.
+    '''
+    def __init__(self,file_path):
+        self.file_path = Path(file_path)
+        self.files = []
+        self.tags = []
+        self.linked_files = []
+        self.review_files(self.file_path)
+
+    def review_files(self,file_path):
+        for item in file_path.iterdir():
+            if item.is_file() and item.suffix == ".md":
+                self.files.append(item.name)
+                with open(item,"r",encoding = "utf-8") as f:
+                    file_text = f.read()
+
+                if "Tags: " in file_text:
+                    tags_string = file_text[file_text.find("Tags: ")+6:file_text.find("\n",file_text.find("Tags: "))]
+                    tags = [tag.replace("#","").strip() for tag in tags_string.split(" ")]
+                    for tag in tags:
+                        if tag not in self.tags:
+                            self.tags.append(tag)
+                link_pattern = "(?<=\[\[).+?(?=\]\])"
+                if re.findall(link_pattern, file_text) != None:
+                    for file in re.findall(link_pattern, file_text):
+                        if file not in self.linked_files and ".md" in file:
+                            self.linked_files.append(file)
 
 
-    
+
+
+            elif item.is_dir():
+                self.review_files(item)
+        self.tags.sort()
+
+
 def bulk_tag(tag, target_dir):
     """
     add tag to all untagged files
@@ -227,3 +257,19 @@ def bulk_tag(tag, target_dir):
         elif item.is_dir():
             bulk_tag(tag, item)
 
+
+def bulk_tag_replace(find_tag, replace_tag, target_dir):
+    """
+    replace tag
+    """
+    for item in Path(target_dir).iterdir():
+        if item.is_file() and item.suffix == ".md":
+            new_file = ObsidianNote(item)
+            if "Templates" not in str(item.parent) and find_tag in new_file.tags:
+                print(item.name)
+                new_file.tags.remove(find_tag)
+                new_file.tags.append(replace_tag)
+                new_file.write_file()
+                
+        elif item.is_dir():
+            bulk_tag_replace(find_tag, replace_tag, item)
