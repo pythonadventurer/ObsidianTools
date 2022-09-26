@@ -1,8 +1,8 @@
-from argparse import MetavarTypeHelpFormatter
 from pathlib import Path
 import re
-import csv
 from time import sleep
+
+# (?<=\[\[).+?(?=\]\])
 
 
 def convert_zim_header(zim_header):
@@ -90,8 +90,6 @@ def remove_file_ids(folder):
         new_name = Path(folder,item.name[9:].replace("_"," "))
         item.rename(new_name)
         print(new_name)
-
-
 class ObsidianNote:
     """
     The text of an ObsidianNote (ObsidianNote.text) has the following parts:
@@ -131,26 +129,28 @@ class ObsidianNote:
                 except UnicodeDecodeError:
                     print("File: " + file_path.name + " has thrown a Unicode fit.")
                     
-            try:
-                frontmatter_start = self.text.find("---")
-                frontmatter_end = self.text.find("---",frontmatter_start + 1)
-                self.frontmatter =  self.text[frontmatter_start:frontmatter_end + 3]
-                
+            
+            # check for frontmatter 
+            if self.text[:3] == "---":
+                self.frontmatter =  self.text[0:self.text.find("---",3)+3]
+            
                 # get the "Created" and "Tags" properties from the frontmatter.
-                if self.frontmatter != None:
-                    frontmatter = self.text.split("---")[1]
-                    frontmatter = frontmatter.split("\n")
+                frontmatter = self.frontmatter.split("---")[1]
+                frontmatter = frontmatter.split("\n")
 
-                    for item in frontmatter:
-                        if item != '':
-                            if "created: " in item:
-                                self.created = item[8:].strip()
-                            
-                            elif "tags: " in item:
-                                tags_string = item[7:len(item)-1].strip()
-                                self.tags = [tag.strip() for tag in tags_string.split(",") if "Tags:" not in tag]
+                for item in frontmatter:
+                    if item != '':
+                        if "created: " in item:
+                            self.created = item[8:].strip()
+                        
+                        elif "tags: " in item:
+                            tags_string = item[7:len(item)-1].strip()
+                            self.tags = [tag.strip() for tag in tags_string.split(",") if "Tags:" not in tag]
+                
+                # If frontmatter present, then content starts after the title
+                content_start = self.text.find("\n", self.text.find("# "))
 
-            except IndexError:
+            else:
                 # Front matter not present.
                 self.frontmatter = ""
                 
@@ -167,37 +167,28 @@ class ObsidianNote:
                 
                 else:
                     self.tags = []
-             
-            # title = the first line starting with '# ' after the front matter
-            self.title = self.text[self.text.find("# ",frontmatter_end):self.text.find("\n",self.text.find("# ",frontmatter_end))][2:]
-            if self.frontmatter == "":
-                content_start = len(self.title) + len(self.created) + 9 + len(self.tags_string()) + 6
-
-            else:
-                #TODO : Fix parsing of self.title
-                content_start = len(self.frontmatter) + 3 + len(self.title)
+                
+                # If no frontmatter, content starts after the tags line
+                content_start = self.text.find("\n", self.text.find("Tags: ")) + 1
+                
+            # title = the first line starting with '# ' 
+            self.title = self.text[self.text.find("# ") + 2:self.text.find("\n",self.text.find("# "))]
 
             self.content = self.text[content_start:]
-
-        
 
         else:
             self.text = None
 
-    def update(self):
+    def write_file(self):
         # write metadata, title and content to the file
 
         with open(self.file_path,"w",encoding="utf-8") as f:
             if self.frontmatter != "":
-                f.write(self.frontmatter) + "\n"
-            f.write("# " + self.title + "\n")
-            if self.created != "":
-                f.write("Created: " + self.created) + "\n"
-            if self.tags != "":
-                f.write("Tags: " + self.tags_string()) + "\n"
-
+                f.write(self.frontmatter + "\n")
+            f.write("# " + self.title + "\n\n")
+            f.write("Created: " + self.created + "\n")
+            f.write("Tags: " + self.tags_string() + "\n")
             f.write(self.content)
-   
 
     def fix_title(self):
         '''
@@ -213,21 +204,73 @@ class ObsidianNote:
             tag_string += "#" + tag + " "
         return tag_string
 
+class ObsidianVault:
+    '''
+    For doing stuff that applies to a complete Obsidian vault.
+    '''
+    def __init__(self,file_path):
+        self.file_path = Path(file_path)
+        self.files = []
+        self.tags = []
+        self.linked_files = []
+        self.review_files(self.file_path)
+
+    def review_files(self,file_path):
+        for item in file_path.iterdir():
+            if item.is_file() and item.suffix == ".md":
+                self.files.append(item.name)
+                with open(item,"r",encoding = "utf-8") as f:
+                    file_text = f.read()
+
+                if "Tags: " in file_text:
+                    tags_string = file_text[file_text.find("Tags: ")+6:file_text.find("\n",file_text.find("Tags: "))]
+                    tags = [tag.replace("#","").strip() for tag in tags_string.split(" ")]
+                    for tag in tags:
+                        if tag not in self.tags:
+                            self.tags.append(tag)
+                link_pattern = "(?<=\[\[).+?(?=\]\])"
+                if re.findall(link_pattern, file_text) != None:
+                    for file in re.findall(link_pattern, file_text):
+                        if file not in self.linked_files:
+                            self.linked_files.append(file)
+                            
 
 
-    
-    
-def review_files(target_dir):
+
+            elif item.is_dir():
+                self.review_files(item)
+        self.tags.sort()
+        self.linked_files.sort()
+        
+
+def bulk_tag(tag, target_dir):
     """
-    Every Markdown file in the vault.
+    add tag to all untagged files
     """
-    for item in target_dir.iterdir():
+    for item in Path(target_dir).iterdir():
         if item.is_file() and item.suffix == ".md":
             new_file = ObsidianNote(item)
-            if new_file.tags == [] and "Templates" not in str(item.parent):
+            if "Templates" not in str(item.parent) and new_file.tags == ['']:
                 print(item.name)
-
-
-
+                new_file.tags = [tag]
+                new_file.write_file()
+                
         elif item.is_dir():
-            review_files(item)    
+            bulk_tag(tag, item)
+
+
+def bulk_tag_replace(find_tag, replace_tag, target_dir):
+    """
+    replace tag
+    """
+    for item in Path(target_dir).iterdir():
+        if item.is_file() and item.suffix == ".md":
+            new_file = ObsidianNote(item)
+            if "Templates" not in str(item.parent) and find_tag in new_file.tags:
+                print(item.name)
+                new_file.tags.remove(find_tag)
+                new_file.tags.append(replace_tag)
+                new_file.write_file()
+                
+        elif item.is_dir():
+            bulk_tag_replace(find_tag, replace_tag, item)
