@@ -8,11 +8,13 @@ from datetime import datetime
 # Prep Lifeline entries for Obsidian
 
 def rename_entry(file_path):
+    # rename Diarium entry to just "YYYY-MM-DD" plus .md
     file_path = Path(file_path)    
     if file_path.suffix == ".txt":
-        new_name = Path(file_path.parent,file_path.stem + ".md")
+        new_name = Path(file_path.parent,file_path.stem[8:18] + ".md")
         file_path.rename(new_name)
         print("Renamed: " + file_path.name)
+
 
 def re_save(file_path):
     # get rid of BOM
@@ -43,8 +45,8 @@ def add_metadata(file_path):
         lines = file.read().split("\n")
     title = lines[0]
     content = lines[1:]
-    new_lines = [title,"Created: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
-    new_lines.append("Tags: #Lifeline")
+    new_lines = [title,"\nCreated: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+    new_lines.append("Tags: #Lifeline\n")
     new_lines.extend(content)
     new_text = "\n".join(new_lines)
     with open(file_path,"w",encoding="utf-8") as file:
@@ -53,14 +55,24 @@ def add_metadata(file_path):
 
 
 
+def process_entries(prep_dir):          
+    # Create a list of the entries
+    entries = [entry for entry in prep_dir.iterdir()]
+
+    for entry in entries:
+        if entry.suffix == ".txt":
+            re_save(entry)
     
+    for entry in entries:
+        if entry.suffix == ".txt":
+            rename_entry(entry)
 
-# Create a list of the entries
-entries = [entry for entry in journal_prep.iterdir()]
+    for entry in entries:
+        fix_entry_date(entry)
 
-add_metadata(entries[0])
+    for entry in entries:
+        add_metadata(entry)
 
 
-
-
+process_entries(journal_prep)
 

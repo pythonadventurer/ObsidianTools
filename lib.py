@@ -231,16 +231,17 @@ class ObsidianVault:
                 link_pattern = "(?<=\[\[).+?(?=\]\])"
                 if re.findall(link_pattern, file_text) != None:
                     for file in re.findall(link_pattern, file_text):
-                        if file not in self.linked_files and ".md" in file:
+                        if file not in self.linked_files:
                             self.linked_files.append(file)
-
+                            
 
 
 
             elif item.is_dir():
                 self.review_files(item)
         self.tags.sort()
-
+        self.linked_files.sort()
+        
 
 def bulk_tag(tag, target_dir):
     """

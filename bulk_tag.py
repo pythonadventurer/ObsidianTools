@@ -2,10 +2,10 @@ from config import *
 from lib import *
 from pathlib import Path
 
-# bulk_tag("Micorsoft_Access",vault)
+# bulk_tag("Relationships",vault)
 
 
-bulk_tag_replace("Micorsoft_Access","Microsoft_Access",vault)
+bulk_tag_replace("Microsoft_Access","Software/Microsoft_Access",vault)
 
 
 
