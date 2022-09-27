@@ -16,6 +16,16 @@ def rename_entry(file_path):
         print("Renamed: " + file_path.name)
 
 
+def rename_txt(file_path):
+    # rename Diarium entry with filename "YYYY-MM-DD.txt"
+    file_path = Path(file_path)    
+    if file_path.suffix == ".txt":
+        new_name = Path(file_path.parent,file_path.stem + ".md")
+        file_path.rename(new_name)
+        print("Renamed: " + file_path.name)
+
+
+
 def re_save(file_path):
     # get rid of BOM
     file_path = Path(file_path)    
@@ -54,6 +64,38 @@ def add_metadata(file_path):
     print("Metatdata added to file: " + file_path.name)
 
 
+def combine_duplicates(file_path):
+    file_path = Path(file_path)
+    file_list = [item for item in file_path.iterdir() if item.is_file()]
+    entry_text = ""
+    add_text = False
+    for n in range(0,len(file_list)):
+        try:
+            current_file = file_list[n].name[8:18]
+            prev_file = file_list[n-1].name[8:18]
+            if current_file == prev_file:
+                with open(file_list[n-1],"r",encoding="utf-8") as f1:
+                    entry_text = f1.read()
+                add_text = True
+            else:
+                add_text = False
+            if add_text == True:
+                with open(file_list[n],"r",encoding="utf-8") as f:
+                    entry_text += f.read()
+            elif entry_text != "":
+                new_file = Path(file_list[n].parent,current_file + ".txt")
+                with open(new_file,"w",encoding="utf-8") as new_file:
+                    new_file.write(entry_text)
+                entry_text = ""
+                add_text = False
+
+
+
+
+        except IndexError:
+            next
+
+
 
 def process_entries(prep_dir):          
     # Create a list of the entries
@@ -62,17 +104,20 @@ def process_entries(prep_dir):
     for entry in entries:
         if entry.suffix == ".txt":
             re_save(entry)
+ 
+
     
-    for entry in entries:
-        if entry.suffix == ".txt":
-            rename_entry(entry)
+    # for entry in entries:
+    #     if entry.suffix == ".txt":
+    #         rename_txt(entry)
 
-    for entry in entries:
-        fix_entry_date(entry)
+    # for entry in entries:
+    #     fix_entry_date(entry)
 
-    for entry in entries:
-        add_metadata(entry)
+    # for entry in entries:
+    #     add_metadata(entry)
+
+combine_duplicates(journal_prep)
 
 
-process_entries(journal_prep)
 
