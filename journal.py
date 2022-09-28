@@ -66,24 +66,16 @@ def add_metadata(file_path):
 
 def combine_duplicates(file_path):
     """
-    start off with variable: match = False
-    for the first match, add current and previous.
-    for subsequent matches, add ONLY current.
-
-    for each file:
-        - add its text to a cumulative variable
-        - if current name = previous name:
-            - 
-
     """
     file_path = Path(file_path)
     file_list = [item for item in file_path.iterdir() if item.is_file()]
     match = False
+    duplicates = []
     for n in range(0,len(file_list)):
 
         # First, check if current = previous. The answer deteremines what is to be done.
         curr_file_name = file_list[n].stem[8:18]
-        prev_file_name = file_list[n-1].stem[8:18] 
+        prev_file_name = file_list[n-1].stem[8:18]
         if curr_file_name == prev_file_name:
             new_file_name = curr_file_name + ".md"
             with open(file_list[n],"r",encoding="utf-8") as f:
@@ -108,18 +100,21 @@ def combine_duplicates(file_path):
                 entry_text += curr_text
         
         else:
-                if match == True:
-                    # new_file = Path(file_list[n].parent,new_file_name)
-                    new_file = new_file_name
-                    print(f"New file: {new_file}")
-                    print(f"Content:\n{entry_text}")
-                    r = input("Continue? (Y/N): ")
-                    if r[0].upper == "Y":
-                        with open(new_file,"w",encoding="utf-8") as f:
-                            f.write(entry_text)
-                        print(f"File:{new_file} created.")
-                    match = False
+            if match == True:
+                new_file = Path(file_list[n].parent,new_file_name)
+                with open(new_file,"w",encoding="utf-8") as f2:
+                    f2.write(entry_text)
+                    print(f"File:{new_file} created.")
+                duplicates.append(new_file.stem)
+                match = False
 
+    # Delete the duplicate files
+    for item in file_list:
+        if item.name[8:18] in duplicates:
+            item.unlink()
+            print(f"File: {item.name} deleted.")
+
+            
 
 
 def process_entries(prep_dir):          
@@ -127,22 +122,30 @@ def process_entries(prep_dir):
     entries = [entry for entry in prep_dir.iterdir()]
 
     for entry in entries:
-        if entry.suffix == ".txt":
-            re_save(entry)
- 
+        new_name = Path(entry.parent,entry.stem[8:18] + ".md")
+        entry.rename(new_name)
 
+
+    # for entry in entries:
+    #     if entry.suffix == ".txt":
+    #         re_save(entry)
     
     # for entry in entries:
     #     if entry.suffix == ".txt":
     #         rename_txt(entry)
 
     # for entry in entries:
-    #     fix_entry_date(entry)
+    #     if entry.suffix == ".md":
+    #         fix_entry_date(entry)
 
     # for entry in entries:
-    #     add_metadata(entry)
+    #     if entry.suffix == ".md":
+    #         add_metadata(entry)
 
-combine_duplicates(journal_prep)
+# combine_duplicates(journal_prep)
 
-
-
+lifeline = Path(r"D:\Rob\my_vault\Lifeline")
+for y in range(1981,2020):
+    new_folder = Path(lifeline,str(y))
+    new_folder.mkdir()
+    
