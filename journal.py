@@ -70,30 +70,29 @@ def combine_duplicates(file_path):
     entry_text = ""
     add_text = False
     for n in range(0,len(file_list)):
-        try:
-            current_file = file_list[n].name[8:18]
-            prev_file = file_list[n-1].name[8:18]
-            if current_file == prev_file:
-                with open(file_list[n-1],"r",encoding="utf-8") as f1:
-                    entry_text = f1.read()
-                add_text = True
-            else:
-                add_text = False
-            if add_text == True:
-                with open(file_list[n],"r",encoding="utf-8") as f:
-                    entry_text += f.read()
-            elif entry_text != "":
-                new_file = Path(file_list[n].parent,current_file + ".txt")
-                with open(new_file,"w",encoding="utf-8") as new_file:
-                    new_file.write(entry_text)
+        with open(file_list[n],"r",encoding="utf-8") as f:
+            curr_text = f.read()
+
+        if add_text == True:
+            entry_text += curr_text
+
+        curr_file_name = file_list[n].stem[8:18]
+        prev_file_name = file_list[n-1].stem[8:18]    
+
+        if curr_file_name == prev_file_name:
+            add_text = True
+            entry_text += curr_text
+              
+        else:
+            if entry_text != "":
+                new_file = Path(file_path[n].parent,file_path.name[8:18] + ".md")
+                with open(new_file,"w",encoding="utf-8") as f:
+                    f.write(entry_text)
                 entry_text = ""
                 add_text = False
 
 
 
-
-        except IndexError:
-            next
 
 
 
