@@ -65,34 +65,60 @@ def add_metadata(file_path):
 
 
 def combine_duplicates(file_path):
+    """
+    start off with variable: match = False
+    for the first match, add current and previous.
+    for subsequent matches, add ONLY current.
+
+    for each file:
+        - add its text to a cumulative variable
+        - if current name = previous name:
+            - 
+
+    """
     file_path = Path(file_path)
     file_list = [item for item in file_path.iterdir() if item.is_file()]
-    entry_text = ""
-    add_text = False
+    match = False
     for n in range(0,len(file_list)):
-        with open(file_list[n],"r",encoding="utf-8") as f:
-            curr_text = f.read()
 
-        if add_text == True:
-            entry_text += curr_text
-
+        # First, check if current = previous. The answer deteremines what is to be done.
         curr_file_name = file_list[n].stem[8:18]
-        prev_file_name = file_list[n-1].stem[8:18]    
-
+        prev_file_name = file_list[n-1].stem[8:18] 
         if curr_file_name == prev_file_name:
-            add_text = True
-            entry_text += curr_text
-              
+            new_file_name = curr_file_name + ".md"
+            with open(file_list[n],"r",encoding="utf-8") as f:
+                curr_text = f.read()
+
+            # match = false means this is the first duplicate file date,
+            # therefore need to get the previous text and add it to the
+            # current.            
+            if match == False:
+                with open(file_list[n-1],"r",encoding="utf-8") as f:
+                    prev_text = f.read()
+
+                entry_text = curr_text + prev_text
+
+                # Set match to True to prevent the first matching file text
+                # from being overwritten by subsequent matches
+                match = True
+
+            elif match == True:
+                # there has already been a prior match, so DON'T re-add the previous file's text again
+                # just add the current text.
+                entry_text += curr_text
+        
         else:
-            if entry_text != "":
-                new_file = Path(file_path[n].parent,file_path.name[8:18] + ".md")
-                with open(new_file,"w",encoding="utf-8") as f:
-                    f.write(entry_text)
-                entry_text = ""
-                add_text = False
-
-
-
+                if match == True:
+                    # new_file = Path(file_list[n].parent,new_file_name)
+                    new_file = new_file_name
+                    print(f"New file: {new_file}")
+                    print(f"Content:\n{entry_text}")
+                    r = input("Continue? (Y/N): ")
+                    if r[0].upper == "Y":
+                        with open(new_file,"w",encoding="utf-8") as f:
+                            f.write(entry_text)
+                        print(f"File:{new_file} created.")
+                    match = False
 
 
 
