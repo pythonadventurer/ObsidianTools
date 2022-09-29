@@ -144,8 +144,76 @@ def process_entries(prep_dir):
 
 # combine_duplicates(journal_prep)
 
-lifeline = Path(r"D:\Rob\my_vault\Lifeline")
-for y in range(1981,2020):
-    new_folder = Path(lifeline,str(y))
-    new_folder.mkdir()
-    
+def journal_files(file_path):
+    # return a list of all journal-related binary files.
+    file_list = []
+    def get_files(dir):
+        for item in dir.iterdir():
+            if item.is_file() and item.suffix != ".md":
+                file_list.append(item)
+            
+            elif item.is_dir():
+                get_files(item)
+
+        return file_list
+    return get_files(journal_files_dir)
+
+
+def journal_entries(journal_dir):
+    # return a list of all entries (complete paths)
+    entry_list = []
+    def get_entries(dir):
+        for item in dir.iterdir():
+            if item.is_file() and item.suffix == ".md":
+                entry_list.append(item)
+            
+            elif item.is_dir():
+                get_entries(item)
+
+        return entry_list
+    return get_entries(journal_dir)
+
+def journal_tags(journal_dir):
+    entries = journal_entries(journal_dir)
+    for entry in entries:
+        with open(entry,"r",encoding="utf-8") as e:
+            entry_text = e.read()
+        entry_tags = entry_text[entry_text.find("Tags:")+6:entry_text.find("\n",entry_text.find("Tags:")+6)]
+        entry_year = entry.name[:4]
+        new_tag = "#Lifeline/" + entry_year
+        entry_text = entry_text.replace(entry_tags, new_tag)
+        with open(entry,"w",encoding="utf-8") as f:
+            f.write(entry_text)
+        print(f"Entry: {entry.name} New tag: {new_tag}")
+
+
+def assign_files():
+    entry_list = journal_entries(journal_dir)
+    file_list = journal_files(journal_files_dir)
+
+    for file in file_list:
+        file_date = file.parent.name[:10]
+        for entry in entry_list:
+            if file_date in entry.name:
+                file_link = "[[" + file.name + "]]"
+                embed_link = "!" + file_link
+                with open(entry,"a",encoding="utf-8") as e:
+                    e.write(file_link + "\n" + embed_link + "\n")
+                    print(f"File: {file.name} added to entry: {entry.name}")
+
+
+def extract_files():
+    file_list = journal_files(journal_files_dir)
+    for file in file_list:
+        new_file_path = Path(journal_files_dir,file.name)
+        try:
+            file.rename(new_file_path)
+        except FileExistsError:
+            alt_file_path = Path(journal_files_dir,file.stem + "_002" + file.suffix)
+            file.rename(alt_file_path)
+
+
+extract_files()
+
+
+
