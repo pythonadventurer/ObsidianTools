@@ -65,36 +65,56 @@ def add_metadata(file_path):
 
 
 def combine_duplicates(file_path):
+    """
+    """
     file_path = Path(file_path)
     file_list = [item for item in file_path.iterdir() if item.is_file()]
-    entry_text = ""
-    add_text = False
+    match = False
+    duplicates = []
     for n in range(0,len(file_list)):
-        try:
-            current_file = file_list[n].name[8:18]
-            prev_file = file_list[n-1].name[8:18]
-            if current_file == prev_file:
-                with open(file_list[n-1],"r",encoding="utf-8") as f1:
-                    entry_text = f1.read()
-                add_text = True
-            else:
-                add_text = False
-            if add_text == True:
-                with open(file_list[n],"r",encoding="utf-8") as f:
-                    entry_text += f.read()
-            elif entry_text != "":
-                new_file = Path(file_list[n].parent,current_file + ".txt")
-                with open(new_file,"w",encoding="utf-8") as new_file:
-                    new_file.write(entry_text)
-                entry_text = ""
-                add_text = False
 
+        # First, check if current = previous. The answer deteremines what is to be done.
+        curr_file_name = file_list[n].stem[8:18]
+        prev_file_name = file_list[n-1].stem[8:18]
+        if curr_file_name == prev_file_name:
+            new_file_name = curr_file_name + ".md"
+            with open(file_list[n],"r",encoding="utf-8") as f:
+                curr_text = f.read()
 
+            # match = false means this is the first duplicate file date,
+            # therefore need to get the previous text and add it to the
+            # current.            
+            if match == False:
+                with open(file_list[n-1],"r",encoding="utf-8") as f:
+                    prev_text = f.read()
 
+                entry_text = curr_text + prev_text
 
-        except IndexError:
-            next
+                # Set match to True to prevent the first matching file text
+                # from being overwritten by subsequent matches
+                match = True
 
+            elif match == True:
+                # there has already been a prior match, so DON'T re-add the previous file's text again
+                # just add the current text.
+                entry_text += curr_text
+        
+        else:
+            if match == True:
+                new_file = Path(file_list[n].parent,new_file_name)
+                with open(new_file,"w",encoding="utf-8") as f2:
+                    f2.write(entry_text)
+                    print(f"File:{new_file} created.")
+                duplicates.append(new_file.stem)
+                match = False
+
+    # Delete the duplicate files
+    for item in file_list:
+        if item.name[8:18] in duplicates:
+            item.unlink()
+            print(f"File: {item.name} deleted.")
+
+            
 
 
 def process_entries(prep_dir):          
@@ -102,22 +122,98 @@ def process_entries(prep_dir):
     entries = [entry for entry in prep_dir.iterdir()]
 
     for entry in entries:
-        if entry.suffix == ".txt":
-            re_save(entry)
- 
+        new_name = Path(entry.parent,entry.stem[8:18] + ".md")
+        entry.rename(new_name)
 
+
+    # for entry in entries:
+    #     if entry.suffix == ".txt":
+    #         re_save(entry)
     
     # for entry in entries:
     #     if entry.suffix == ".txt":
     #         rename_txt(entry)
 
     # for entry in entries:
-    #     fix_entry_date(entry)
+    #     if entry.suffix == ".md":
+    #         fix_entry_date(entry)
 
     # for entry in entries:
-    #     add_metadata(entry)
+    #     if entry.suffix == ".md":
+    #         add_metadata(entry)
 
-combine_duplicates(journal_prep)
+# combine_duplicates(journal_prep)
+
+def journal_files(file_path):
+    # return a list of all journal-related binary files.
+    file_list = []
+    def get_files(dir):
+        for item in dir.iterdir():
+            if item.is_file() and item.suffix != ".md":
+                file_list.append(item)
+            
+            elif item.is_dir():
+                get_files(item)
+
+        return file_list
+    return get_files(journal_files_dir)
+
+
+def journal_entries(journal_dir):
+    # return a list of all entries (complete paths)
+    entry_list = []
+    def get_entries(dir):
+        for item in dir.iterdir():
+            if item.is_file() and item.suffix == ".md":
+                entry_list.append(item)
+            
+            elif item.is_dir():
+                get_entries(item)
+
+        return entry_list
+    return get_entries(journal_dir)
+
+def journal_tags(journal_dir):
+    entries = journal_entries(journal_dir)
+    for entry in entries:
+        with open(entry,"r",encoding="utf-8") as e:
+            entry_text = e.read()
+        entry_tags = entry_text[entry_text.find("Tags:")+6:entry_text.find("\n",entry_text.find("Tags:")+6)]
+        entry_year = entry.name[:4]
+        new_tag = "#Lifeline/" + entry_year
+        entry_text = entry_text.replace(entry_tags, new_tag)
+        with open(entry,"w",encoding="utf-8") as f:
+            f.write(entry_text)
+        print(f"Entry: {entry.name} New tag: {new_tag}")
+
+
+def assign_files():
+    entry_list = journal_entries(journal_dir)
+    file_list = journal_files(journal_files_dir)
+
+    for file in file_list:
+        file_date = file.parent.name[:10]
+        for entry in entry_list:
+            if file_date in entry.name:
+                file_link = "[[" + file.name + "]]"
+                embed_link = "!" + file_link
+                with open(entry,"a",encoding="utf-8") as e:
+                    e.write(file_link + "\n" + embed_link + "\n")
+                    print(f"File: {file.name} added to entry: {entry.name}")
+
+
+def extract_files():
+    file_list = journal_files(journal_files_dir)
+    for file in file_list:
+        new_file_path = Path(journal_files_dir,file.name)
+        try:
+            file.rename(new_file_path)
+        except FileExistsError:
+            alt_file_path = Path(journal_files_dir,file.stem + "_002" + file.suffix)
+            file.rename(alt_file_path)
+
+
+extract_files()
 
 
 
