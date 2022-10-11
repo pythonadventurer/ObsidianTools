@@ -31,9 +31,9 @@ def zim_to_md(zim_file,output_dir):
         header_length = len(rst_header)
         header_start_index = rst_start - header_length
         header_text = text[header_start_index:rst_start]
-
+        text = text.replace(header_text + rst_header,"## " + header_text + "\n"
     
-    
+        
 
     
 
