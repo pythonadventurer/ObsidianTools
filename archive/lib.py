@@ -90,6 +90,7 @@ def remove_file_ids(folder):
         new_name = Path(folder,item.name[9:].replace("_"," "))
         item.rename(new_name)
         print(new_name)
+        
 class ObsidianNote:
     """
     The text of an ObsidianNote (ObsidianNote.text) has the following parts:
