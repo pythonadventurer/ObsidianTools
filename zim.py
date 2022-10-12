@@ -1,7 +1,101 @@
+import re
 from config import *
 from pathlib import Path
 
-def zim_to_md(zim_file,output_dir):
+def convert_rst_heading(heading_char,md_num,text):
+    """
+    Convert ReStructuredText headings to Markdown headings.
+        heading_char : the character used to specify the header
+                      level. Usually: "#","=","-","~"
+        md_num : Markdown level to assign to the header.
+                 1 = "#", 2 = "##", etc.
+        text : the text containing the headings to be converted.
+    """
+    
+    h = re.compile("(.+)\n" + heading_char + "+\n")
+    match = h.findall(text)
+    for heading in match:
+        text = text.replace(heading + "\n" + len(heading) * heading_char,
+                            "#" * md_num + " " + heading)
+    return text
+
+
+
+def get_rst_title(title_char, text):
+    """
+    Extract a RST-formatted title.
+    and below. Example:
+
+    ##################################
+    2019-10-28 The Results Review Form
+    ##################################
+
+    or:
+
+    2019-10-28 The Results Review Form
+    ##################################
+
+
+    """
+    # double line title
+    t1 = re.compile("^" + title_char + "+\n(.+)\n" + title_char + "+")
+
+    # single line title
+    t2 = re.compile("^(.+)\n" + title_char + "+\n")
+
+    match1 = t1.match(text)
+    match2 = t2.match(text)
+
+    if match1 != None:
+        title = match1.group(1)
+        text = text.replace(title_char * len(title) + "\n" + title + "\n" + title_char * len(title),
+                            "# " + title)        
+            
+    elif match2 != None:
+        title = match2.group(1)
+        text = text.replace(title + "\n" + title_char * len(title),
+                    "# " + title)
+
+    else:
+        title = ""
+    
+
+    return text
+        
+
+def md_title(text):
+    """
+    Return a Markdown title from the text.
+    Must be a line starting with "# ".
+    """
+    for line in text.split("\n"):
+        if line.startswith("# "):
+            title = line[2:]
+            return title
+    
+    else:
+        return None
+
+def fix_problem_chars(text):
+    """
+    Replace problematic characters:
+        Open smart quote : â€˜
+        Close smart quote : â€™
+        Bullet dot : â€¢
+        Dash : â€“
+
+    """
+    problem_chars =[['â€˜','"'],
+                   ['â€™','"'],
+                   ['â€¢','-'],
+                   ['â€“','-']]
+
+    for char in problem_chars:
+        text = text.replace(char[0],char[1])
+
+    return text
+
+def zim_to_md(zim_file, output_dir):
     try:
         with open(zim_file,"r") as f:
             text = f.read()
@@ -10,34 +104,41 @@ def zim_to_md(zim_file,output_dir):
         with open(zim_file,"r",encoding="utf-8") as f:
             text = f.read()   
 
-    # eliminate zim header
-    if zim_header in text:
-        complete_header = text[:text.find("\n",60)]
-        text = text.replace(complete_header,"")
+    text = fix_problem_chars(text)
+    text = get_rst_title("#",text)
+    text = convert_rst_heading("=",2,text)
+    # text = convert_rst_heading("+",3,text)
+    text = convert_rst_heading("-",4,text)
+    title = md_title(text)
+    file_name = Path(output_dir,title + ".md")
+    with open(file_name,"w",encoding="utf-8") as f:
+        f.write(text)
 
-    # replace asterisk list bullets
-    text = text.replace("* ","- ")
-    text = text.replace("o   "," - ")
+    print("Created file: " + file_name.name)
 
-    # replace problem characters
-    text = text.replace('‘','"')
-    text = text.replace('’','"')
+def strip_file_names(dir):
+    for item in Path(dir).iterdir():
+        if item.is_file():
+            new_name = item.name[:10] + ".md"
+            item.rename(Path(item.parent,new_name))
+            print("Renamed: " + new_name)
 
-    # replace rst headers
-    rst_start = text.find("\n===")
-    if rst_start != -1:
-        rst_end = text.find("=\n",rst_start) + 1
-        rst_header = text[rst_start:rst_end]
-        header_length = len(rst_header)
-        header_start_index = rst_start - header_length
-        header_text = text[header_start_index:rst_start]
-        text = text.replace(header_text + rst_header,"## " + header_text + "\n"
-    
-        
+def process_zim_files(zim_dir,output_dir):
+    for file in Path(zim_dir).iterdir():
+        zim_to_md(file, output_dir)
 
-    
 
-zim_to_md(Path(zim_dir,"Journal/2019/01/28.txt"),notebook_output)
+
+# process_zim_files(zim_dir,notebook_output)
+
+strip_file_names(notebook_output)
+
+
+
+
+
+
+
 
 
 
