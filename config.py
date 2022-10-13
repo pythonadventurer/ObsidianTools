@@ -7,3 +7,5 @@ open_task = "- [ ] #task 📅 "
 vault = Path(r"C:\Users\Robf.DESKTOP-JNCQ9MB\Documents\DevNotes2")
 # vault = Path(r"F:\DevNotes2")
 vault_backup = Path(r"F:\devnotes")
+backend = Path(r"\\server\Access\Backend_v2")
+backend_backup = Path(r"F:\backend")
