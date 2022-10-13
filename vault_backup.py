@@ -1,14 +1,23 @@
-import os
+from pathlib import Path
+from config import *
+
 import zipfile
+from datetime import datetime as dt
+
+def zip_backup(source,dest):
+    source = Path(source)
+    dest = Path(dest)
+    with zipfile.ZipFile(dest, mode="w") as archive:
+        for file_path in source.rglob("*"):
+            archive.write(file_path,
+            arcname=file_path.relative_to(source))
+    print("Backup completed.")
+
     
-def zipdir(path, ziph):
-    # ziph is zipfile handle
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            ziph.write(os.path.join(root, file), 
-                       os.path.relpath(os.path.join(root, file), 
-                                       os.path.join(path, '..')))
+timestamp = str(dt.now()).replace(" ","-").replace(":","")[:17]
 
+source = vault
+dest = Path(vault_backup,timestamp + " DevNotes2.zip")
 
-with zipfile.ZipFile('Python.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-    zipdir('tmp/', zipf)
+zip_backup(source,dest)
+
