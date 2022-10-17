@@ -24,36 +24,39 @@ class ObsidianNote:
 
         ctime = os.path.getctime(file_path)
         self.file_id = dt.fromtimestamp(ctime).strftime("%Y.%m.%d.%H.%M.%S.%f")[:23]
-        self.meta_dict = {}
+        self.meta_list = []
         if self.text.startswith("---"):
             self.metadata = self.text[3:self.text.find("---",3)]
             for line in self.metadata.split("\n"):
                 if ": " in line:
                     line = line.split(": ")
-                    self.meta_dict[line[0]] = line[1]
-            if "tags" in self.meta_dict.keys():
-                self.meta_dict["tags"] = [tag for tag in self.meta_dict["tags"].split(" ")]
+                    self.meta_list.append([line[0], line[1]])
+
+            for item in self.meta_list:
+                if item[0] == "tags":
+                    item[1] = [tag for tag in item[1].split(" ")]
 
         else:
             self.metadata = None
 
     def save_text(self):
-        with open(self.file_path,"w") as f:
+        with open(self.file_path,"w",encoding="utf-8") as f:
             f.write(self.text)
 
     def update_metadata(self):
-        if self.meta_dict != {}:
+        if self.meta_list != []:
             new_metadata = "\n"
-            for key in self.meta_dict.keys():
-                if key == "tags":
-                    if len(self.meta_dict["tags"]) > 1:
-                        tags_string = " ".join(self.meta_dict["tags"])
+            for item in self.meta_list:
+                if item[0] == "tags":
+                    if len(item[1]) > 1:
+                        tags_string = " ".join(item[1])
                     else:
-                        tags_string = self.meta_dict["tags"][0]
+                        tags_string = item[1][0]
 
                     new_metadata += "tags: " + tags_string + "\n"
                 else:
-                    new_metadata += key + ": " + self.meta_dict[key] + "\n"
+                    new_metadata += item[0] + ": " + item[1] + "\n"
+
             if self.metadata == None:
                 self.text = "---" + new_metadata + "---\n" + self.text
 
@@ -63,37 +66,63 @@ class ObsidianNote:
             self.save_text()
 
     def extract_tags(self):
-        if "Tags: " in self.text and "tags" not in self.meta_dict.keys():
+        has_tags = False
+        for item in meta_list:
+            if item[0] == "tags":
+                has_tags = True
+
+        if "Tags: " in self.text and has_tags == False:
             tags_line = self.text[self.text.find("Tags: "):self.text.find("\n",self.text.find("Tags: "))].strip()
             tags_string = self.text[self.text.find("Tags: ") + 6:self.text.find("\n",self.text.find("Tags: ") + 6)]
             tags_string = tags_string.strip()
             if " " not in tags_string:
-                self.meta_dict["tags"] = [tags_string.replace("#","")]
+                self.meta_list.append(["tags", [tags_string.replace("#","")]])
 
             else:    
-                self.meta_dict["tags"] = [tag.replace("#","") for tag in tags_string.split(" ")]
+                self.meta_list.append(["tags",[tag.replace("#","") for tag in tags_string.split(" ")]])
+
             self.text = self.text.replace(tags_line + "\n","")
             self.update_metadata()
 
     def add_file_id(self):
-        self.meta_dict["file_id"] = self.file_id
-        self.update_metadata()
+        has_id = False
+        for item in self.meta_list:
+            if item[0] == "file_id":
+                has_id = True
+        if has_id == False:
+            self.meta_list.append(["file_id",self.file_id])
+            self.update_metadata()
 
+        # remove created date if exists
         if "Created: " in self.text:
             created_line = self.text[self.text.find("Created: "):self.text.find("\n",self.text.find("Created: "))]
             self.text = self.text.replace(created_line,"")
             self.save_text()
 
     def add_tag(self, tag):
-        self.meta_dict["tags"].append(tag)
+        has_tags = False
+        for item in self.meta_list:
+            if item[0] == "tags":
+                has_tags == True
+        
+        if has_tags == True:
+            for item in self.meta_list:
+                if item[0] == "tags":
+                    item[1].append(tag)
+
+        else:
+            self.meta_list.append(["tags",[tag]])
+
         self.update_metadata()
     
     def remove_tag(self,tag):
-        try:
-            self.meta_dict["tags"].remove(tag)
-            self.update_metadata()
-        except ValueError:
-            print(f"Sorry, tag {tag} not found.")
+        if "tags" in self.meta_list:
+            for item in self.meta_list:
+                if item[0] == "tags":
+                    if tag in item[1]:
+                        item[1].remove(tag)
+
+
         
     def list_tags(self):
         for tag in self.meta_dict["tags"]:
