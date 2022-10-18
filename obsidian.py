@@ -11,7 +11,6 @@ import os
 
 """
 
-
 class ObsidianNote:
     def __init__(self,file_path):
         self.file_path = Path(file_path)
