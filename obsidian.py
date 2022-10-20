@@ -66,7 +66,7 @@ class ObsidianNote:
 
     def extract_tags(self):
         has_tags = False
-        for item in meta_list:
+        for item in self.meta_list:
             if item[0] == "tags":
                 has_tags = True
 
@@ -74,13 +74,14 @@ class ObsidianNote:
             tags_line = self.text[self.text.find("Tags: "):self.text.find("\n",self.text.find("Tags: "))].strip()
             tags_string = self.text[self.text.find("Tags: ") + 6:self.text.find("\n",self.text.find("Tags: ") + 6)]
             tags_string = tags_string.strip()
+            tags_string = tags_string.replace("  "," ")
             if " " not in tags_string:
                 self.meta_list.append(["tags", [tags_string.replace("#","")]])
 
             else:    
                 self.meta_list.append(["tags",[tag.replace("#","") for tag in tags_string.split(" ")]])
 
-            self.text = self.text.replace(tags_line + "\n","")
+            self.text = self.text.replace(tags_line,"")
             self.update_metadata()
 
     def add_file_id(self):
@@ -90,7 +91,8 @@ class ObsidianNote:
                 has_id = True
         if has_id == False:
             self.meta_list.append(["file_id",self.file_id])
-            self.update_metadata()
+        
+        self.update_metadata()
 
         # remove created date if exists
         if "Created: " in self.text:
