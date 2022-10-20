@@ -42,6 +42,9 @@ class ObsidianNote:
         else:
             with open(file_path,"r",encoding="utf-8") as new_note:
                 self.all_text = new_note.read()
+
+            ctime = os.path.getctime(file_path)
+            self.file_id = dt.fromtimestamp(ctime).strftime("%Y.%m.%d.%H.%M.%S.%f")[:23]   
             self.metadata_text = self.all_text[self.all_text.find("---")+3:self.all_text.find("---",self.all_text.find("---")+3)]
             self.metadata = self.get_metadata()
             self.text = self.all_text[len(self.metadata_text)+7:]
@@ -132,10 +135,35 @@ class ObsidianNote:
                 self.write_metadata()
                 self.write_file()
     
+    def remove_heading(self,level):
+        """
+        Remove the first heading encountered in the text that corresponds to the selected level.
+        """
+        heading_text = "#" * level + " "
+        heading = self.text[self.text.find(heading_text):self.text.find("\n",self.text.find(heading_text))]
+        self.text = self.text.replace(heading + "\n", "")
+        self.write_file()
+
+    def add_heading(self,text,level):
+        heading_text = "#" * level + " " + text
+        self.text = self.text + heading_text + "\n"
+        self.write_file()
+
+    def add_paragraph(self,text):
+        self.text = self.text + text + "\n\n"
+        self.write_file()
+
+    def add_bullet_list(self,list):
+        for item in list:
+            self.text += "- " + item + "\n"
+        self.text += "\n"
+        self.write_file()
+
+
 
     def write_file(self):
         with open(self.file_path,"w",encoding="utf-8") as f:
-            f.write("---\n" + self.metadata_text + "---\n")
+            f.write("\n---" + self.metadata_text + "\n---\n")
             f.write(self.text)
 
 
