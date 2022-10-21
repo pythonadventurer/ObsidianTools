@@ -45,16 +45,16 @@ class ObsidianNote:
 
             ctime = os.path.getctime(file_path)
             self.file_id = dt.fromtimestamp(ctime).strftime("%Y.%m.%d.%H.%M.%S.%f")[:23]   
-            self.metadata_text = self.all_text[self.all_text.find("---")+3:self.all_text.find("---",self.all_text.find("---")+3)]
+            self.metadata_text = "---\n" + self.all_text[self.all_text.find("---")+4:self.all_text.find("---",self.all_text.find("---")+4)] + "---\n"
             self.metadata = self.get_metadata()
-            self.text = self.all_text[len(self.metadata_text)+7:]
+            self.text = self.all_text[len(self.metadata_text):]
 
 
     def get_metadata(self):
         """
         read the metadata into a list
         """   
-        meta_lines = self.metadata_text.split("\n")[1:-1]
+        meta_lines = self.metadata_text.split("\n")[1:-2]
         new_list = []
         for line in meta_lines:
             new_list.append(line.split(": "))
@@ -63,6 +63,9 @@ class ObsidianNote:
             try:
                 if len(new_list[line][1].split(" ")) > 1:
                     new_list[line][1] = new_list[line][1].split(" ")
+                else:
+                    new_list[line][1] = [new_list[line][1]]
+
             except IndexError:
                 pass
 
@@ -76,14 +79,15 @@ class ObsidianNote:
 
         Writing the metadata from the list overwrites the existing metadata text.
         """
-        new_metadata = ""
+        new_metadata = "---\n"
         for line in self.metadata:
             new_metadata += line[0] + ": "
-            if type(line[1]) == list:
+            if len(line[1]) > 1:
                 new_metadata += " ".join(line[1]) + "\n"
             else:
-                new_metadata += line[1] + "\n"
+                new_metadata += line[1][0] + "\n"
 
+        new_metadata += "---\n"    
         self.metadata_text = new_metadata
         self.write_file
 
@@ -96,16 +100,14 @@ class ObsidianNote:
         for n in range(len(self.metadata)):
             if self.metadata[n][0] == key:
                 key_exists = True
-                if type(self.metadata[n][1]) == list:
-                    self.metadata[n][1].append(value)
-                else:
-                    if ": " in self.metadata[n][0]:
-                        space = ""
-                    else:
-                        space = " "
-                    self.metadata[n][1] += space + value
+                self.metadata[n][1].append(value)
+    
         if key_exists == False:
-            self.metadata.append([key, value])
+            if type(value) == list:
+                self.metadata.append([key, value])
+            else:
+                self.metadata.append([key,[value]])
+                
 
         self.write_metadata()
         self.write_file()
@@ -159,11 +161,37 @@ class ObsidianNote:
         self.text += "\n"
         self.write_file()
 
+    def remove_line(self,start_text):
+        """
+        Remove a line within the note text that starts with start_text.
+        Return the text of the removed line.
+        """
+        for line in self.text.split("\n"):
+            if line.startswith(start_text):
+                line_text = line
+        
+        self.text = self.text.replace(line_text + "\n","")
+        self.write_file()
+        return line_text
+
+    def convert_tags_line(self):
+        """
+        Converts tags from a line in the text of the note
+        to tags in metdata. Overwrites existing tags in
+        metadata.
+        """
+        tags_line = self.remove_line("Tags: ")
+        tags_line = tags_line.replace("Tags: ","")
+        tags_line = tags_line.replace("#","")
+        tags_line = tags_line.split(" ")
+        self.add_metadata("tags", tags_line)
+        self.write_metadata()
+        self.write_file()
 
 
     def write_file(self):
         with open(self.file_path,"w",encoding="utf-8") as f:
-            f.write("\n---" + self.metadata_text + "\n---\n")
+            f.write(self.metadata_text)
             f.write(self.text)
 
 
