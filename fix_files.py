@@ -10,5 +10,5 @@ for note in inbox.iterdir():
         current_note = ObsidianNote(note)
         # current_note.add_file_id()
         # current_note.remove_title()
-        current_note.extract_tags()
+      #  current_note.extract_tags()
 

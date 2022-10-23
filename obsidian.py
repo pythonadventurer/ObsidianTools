@@ -65,7 +65,6 @@ class ObsidianNote:
                 # since the existing text has no metadata block, body_text = all_text.
                 self.write_file(self.write_metadata(self.metadata),self.all_text)
                 
-
             else:
                 self.metadata = self.read_metadata(self.all_text)
                 self.body_text = self.all_text[len(self.metadata_text):]
@@ -86,8 +85,7 @@ class ObsidianNote:
    
     def write_metadata(self, metadata):
         """
-        User makes changes to the metadata by altering the metadata list.  This list is then
-        written to the metadata text.
+        User makes changes to the metadata by altering the metadata list.  This list is then written to the metadata text.
 
         Writing the metadata from the list overwrites the existing metadata text.
         """
