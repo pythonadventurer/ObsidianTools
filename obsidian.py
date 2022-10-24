@@ -44,7 +44,7 @@ class ObsidianNote:
         """
         read metadata from text into a list.
         """
-        if self.all_text.find("---\n") == -1:
+        if self.all_text.startswith("---\n") == False:
             return []
 
         else:
@@ -57,6 +57,7 @@ class ObsidianNote:
 
             return metadata_contents
    
+
     def write_metadata(self, metadata):
         """
         User makes changes to the metadata by altering the metadata list.  This list is then written to the metadata text.
@@ -165,6 +166,14 @@ class ObsidianNote:
                 line_text = line 
                 self.body_text = self.body_text.replace(line_text + "\n","")
                 self.save_file()
+
+    def replace_text(self, text,replace):
+        """
+        Replace text.
+        """
+        self.body_text = self.body_text.replace(text,replace)
+        self.save_file()
+
 
     def add_heading(self, level, heading_text):
         heading_text = "#" * level + " " + heading_text
