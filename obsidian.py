@@ -17,11 +17,15 @@ class ObsidianNote:
             return None
 
         elif self.file_path.exists() == False:
-            # All new notes get a file ID based on the creation time.
+
             with open(file_path,"w",encoding="utf-8") as new_note:
                 ctime = os.path.getctime(file_path)
                 self.file_id = dt.fromtimestamp(ctime).strftime("%Y.%m.%d.%H.%M.%S.%f")[:23]
- 
+            self.metadata = []
+            self.all_text = ""
+            self.body_text = ""
+
+
         else:
             with open(file_path,"r",encoding="utf-8") as new_note:
                 ctime = os.path.getctime(file_path)
@@ -82,9 +86,13 @@ class ObsidianNote:
             if self.metadata[n][0] == key:
                 key_exists = True
                 if type(value) == list:
-                    self.metadata[n][1].extend(value)
+                    # Only append values that are not already present.
+                    for item in value:
+                        if item not in self.metadata[n][1]:
+                            self.metadata[n][1].append(item)
                 else: 
-                    self.metadata[n][1].append(value)
+                    if value not in self.metadata[n][1]:
+                        self.metadata[n][1].append(value)
     
         if key_exists == False:
             if type(value) == list:
@@ -96,7 +104,13 @@ class ObsidianNote:
 
 
     def add_file_id(self):
-        self.add_metadata("file_id",self.file_id)
+        exists = False
+        for item in self.metadata:
+            if item[0] == "file_id":
+                exists = True
+
+        if exists == False:
+            self.add_metadata("file_id",self.file_id)
 
 
     def remove_metadata_value(self, key,value):
@@ -154,8 +168,9 @@ class ObsidianNote:
 
     def add_heading(self, level, heading_text):
         heading_text = "#" * level + " " + heading_text
-        self.body_text = self.body_text + heading_text + "\n"
-        self.save_file()
+        if heading_text not in self.body_text:
+            self.body_text += heading_text + "\n"
+            self.save_file()
 
     def add_title(self, title_text):
         # Add a level 1 title to the top of the file
@@ -163,25 +178,19 @@ class ObsidianNote:
         self.body_text = title_text + self.body_text
         self.save_file()      
 
+    def add_paragraph(self, paragraph_text):
+        """
+        Add a paragraph to the text and return the text.
+        """
+        if paragraph_text not in self.body_text:
+            self.body_text += paragraph_text + "\n\n"
+            self.save_file()
 
-
-    # def add_paragraph(self, paragraph, text):
-    #     """
-    #     Add a paragraph to the text and return the text.
-    #     """
-    #     text = text + paragraph + "\n\n"
-    #     return text
-
-    # def add_bullet_list(self, list, text):
-    #     for item in list:
-    #         text += "- " + item + "\n"
-    #     text += "\n"
-    #     return text
-
-
-
-
- 
+    def add_bullet_list(self, list):
+        for item in list:
+            self.body_text += "- " + item + "\n"
+        self.body_text += "\n"
+        self.save_file()
         
     def save_file(self):
         with open(self.file_path,"w",encoding="utf-8") as f:

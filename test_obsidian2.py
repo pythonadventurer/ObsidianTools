@@ -2,32 +2,23 @@ from pathlib import Path
 from obsidian import *
 
 new_note = Path(vault,"Vault_Inbox/Test Note.md")
-existing_note = Path(vault, "Vault_Inbox/Hitler on Christianity and the Nation.md")
-old_note = Path(vault, "Vault_Inbox/Choosing the Right Container.md")
-
+if new_note.exists():
+    new_note.unlink()
 
 my_note = ObsidianNote(new_note)
-my_existing_note = ObsidianNote(existing_note)
-my_old_note = ObsidianNote(old_note)
-
-# print(my_note.metadata) 
-# print(my_existing_note.metadata)
-# print(my_existing_note.body_text)
-
-# my_note.add_file_id()
-
-# my_note.add_metadata("tags", ["frogs","snails"])
-# my_note.remove_line("This is the barn")
-
-my_old_note.convert_tags_line()
-
+my_note.add_file_id()
+my_note.add_metadata("tags",["Pizza","Ice_Cream","Kitties"])
+my_note.add_heading(1, "A Note About Nice Things")
+my_note.add_paragraph("Pizza, ice cream and kitties are very nice.")
+my_note.add_paragraph("Other things are nice also, but I don't feel like writing about them.")
+my_note.add_heading(2, "List of Nice Kitties")
+my_note.add_bullet_list(["Brandy","Ripley","Dashie","Tita"])
+my_note.add_heading(2, "List of Yummy Ice Cream Flavors")
+my_note.add_bullet_list(["Strawberry","Chocolate","Maple Walnut"])
+my_note.add_heading(2, "List of Delicious Types of Pizza")
+my_note.add_bullet_list(["Pepperoni","Veggie","Cheese","Meat"])
+my_note.remove_heading(1)
 
 
-
-
-
-# my_note.remove_metadata_value("tags", "frogs")
-
-# my_note.remove_metadata_key("tags")
 
 
