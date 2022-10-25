@@ -3,7 +3,7 @@ from pathlib import Path
 from config import *
 from datetime import datetime as dt
 import os
-
+import re
 
 """
 
@@ -181,11 +181,13 @@ class ObsidianNote:
             self.body_text += heading_text + "\n"
             self.save_file()
 
+
     def add_title(self, title_text):
         # Add a level 1 title to the top of the file
         title_text = "# " + title_text + "\n"
         self.body_text = title_text + self.body_text
         self.save_file()      
+
 
     def add_paragraph(self, paragraph_text):
         """
@@ -200,7 +202,17 @@ class ObsidianNote:
             self.body_text += "- " + item + "\n"
         self.body_text += "\n"
         self.save_file()
+
+    def rename_file(self,new_name):
+        self.file_path.rename(Path(self.file_path.parent,new_name))     
+
+    def get_wikilinks(self):
+        return [link for link in re.findall("\[\[.+\]\]",self.body_text)]
+
+    def create_md_link(self,description,source):
+        return f"[{description}]({source})"
         
+
     def save_file(self):
         with open(self.file_path,"w",encoding="utf-8") as f:
             if self.metadata != []:

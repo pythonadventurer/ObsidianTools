@@ -1,11 +1,11 @@
 from pathlib import Path
 from obsidian import *
 
-folder = Path(r"C:\Users\Robf.DESKTOP-JNCQ9MB\Documents\DevNotes2\Projects\2022")
+folder = Path(r"C:\Users\Robf.DESKTOP-JNCQ9MB\Documents\DevNotes2\Projects\2020")
 
 for file in folder.iterdir():
     note = ObsidianNote(file)
-    note.replace_text("\n\n","\n")
+    note.replace_text("Specimen_#_Field1","Specimen # Field1")
     
     # note.add_file_id()    
     # note.remove_heading(1)
