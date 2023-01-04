@@ -4,7 +4,7 @@ import frontmatter
 import yaml
 
 """
-experiements with Python libraries that can handle Obsidian frontmatter!
+experiments with Python libraries that can handle Obsidian frontmatter!
 See: https://python-frontmatter.readthedocs.io/en/latest/
 
 """
