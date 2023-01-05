@@ -1,4 +1,4 @@
-# Obsidian Tools :  Miscellaneous Python tools for the Obsidian note taking app.
+# PySidian :  Miscellaneous Python tools for the Obsidian note taking app.
 
 ## Description
 
