@@ -3,18 +3,13 @@ from pathlib import Path
 from tools import *
 from config import *
 
-
+# timestamp tools
 print(meta_timestamp())
 print(file_timestamp())
-new_note = Note()
-print(new_note.vault)
-# backup(new_note.vault,Path.cwd().parent)
-new_note.read_note("test_note.md")
-print(new_note.metadata)
-print(new_note.content)
-print(new_note.filename)
-new_note.metadata["inspiration"] = "Dog Tales"
-new_note.content = new_note.content.replace("Lorem","Bacon")
-new_note.filename = "test_note_2.md"
-new_note.write_note()
 
+# read and write a blank note
+my_note = Note()
+my_note.metadata["tags"] = ["Testing one two three"]
+my_note.metadata["tags"].append("Kitties")
+my_note.content = "This is a test of the Emergency Note System."
+my_note.write_note()

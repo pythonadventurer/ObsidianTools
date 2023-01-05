@@ -1,9 +1,12 @@
 ---
-title: My Awesome Note
 author: Moi
-tags: ["Great_Literature","Awesome_Notes"]
 created: 2023-01-05 06:50:36
+tags:
+- Great_Literature
+- Awesome_Notes
+title: My Awesome Note
 ---
+
 Lorem ipsum, grabba cuppin sipsum.
 
 The quick, brown fox was too lazy to jump over the lazy dog, so they both fell
