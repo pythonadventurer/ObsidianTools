@@ -22,8 +22,12 @@ class Note:
 		"""
 		Read metadata and content from an existing note.
 		"""
-		with open(NotePath,"r",) as file:
-			self.post = frontmatter.load(file)
+		try:
+			with open(NotePath,"r",) as file:
+				self.post = frontmatter.load(file)
+		except UnicodeDecodeError:
+			with open(NotePath,"r",encoding = "utf-8") as file:
+				self.post = frontmatter.load(file)	
 
 		self.filepath = Path(NotePath)
 		self.metadata = self.post.metadata
@@ -36,6 +40,6 @@ class Note:
 		# update the frontmatter.post object for writing
 		self.post.metadata = self.metadata
 		self.post.content = self.content
-		with open(self.filepath,"w") as file:
+		with open(self.filepath,"w",encoding="utf-8") as file:
 			text = frontmatter.dumps(self.post)	
 			file.write(text)
