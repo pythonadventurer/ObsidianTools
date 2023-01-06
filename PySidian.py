@@ -7,16 +7,26 @@ class Note:
 	A note has two components: Note.metadata and Note.content.
 	content is the note's text, so it is a string that can be manipulated
     with Python string methods.  metadata is a dictionary.
-
-
-
 	"""
 	def __init__(self):
 		self.filepath = Path(Path.cwd(),"Untitled.md")
 		self.post = frontmatter.loads("")
 		self.metadata = {}
-		self.content = ""
-		
+		self.content = ""	
+
+	def add_metadata(self, key, value):
+		"""
+		If the key already exists in the metadata, its value will
+		be replaced.
+		"""	
+		self.metadata[key] = value
+
+	def add_tag(self,tag):
+		if "tags" in self.metadata.keys():
+			self.metadata["tags"].append(tag)
+		else:
+			self.metadata["tags"] = ["tag"]
+
 
 	def read_note(self, NotePath):
 		"""
@@ -33,6 +43,14 @@ class Note:
 		self.metadata = self.post.metadata
 		self.content = self.post.content
 
+	def remove_metadata(self,key):
+		if key in self.metadata.keys():
+			del self.metadata[key]
+
+	def remove_tag(self,tag):
+		if "tags" in self.metadata.keys():
+			if tag in self.metadata["tags"]:
+				self.metadata["tags"].remove(tag)
 
 	def write_note(self):
 		"""
